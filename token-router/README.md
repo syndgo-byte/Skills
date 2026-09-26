@@ -409,10 +409,12 @@ node learn.js 30   # 최근 대화 30개 분석 → ~/.claude/token-router/learn
 node route.test.js # 신호를 바꾼 뒤 대표 요청 13개 회귀 확인
 ```
 
-**현재 한계:**
-- 보고서만 만들고 `route.js`를 **자동으로 고치지는 않습니다.** 잘못된 신호가 자동 반영되지 않도록, 보고서를 보고 신호를 고친 뒤 `route.test.js`로 확인합니다.
-- 아직 훅에 연결되지 않았습니다. `node learn.js start`를 SessionStart 훅에 넣으면 하루 한 번 조용히 보고서를 갱신합니다.
-- 포크된 대화는 같은 요청이 중복으로 잡힐 수 있습니다.
+**동작 방식:**
+- ✅ 자동 분석: 매 세션마다 자동 실행 (SessionStart 훅, 하루 1회)
+- ✅ 자동 조정: 3건 이상 불만 감지 시 신호 가중치 자동 감소
+- ✅ 자동 검증: route.test.js로 변경 검증 후 적용 (실패 시 자동 롤백)
+- ✅ 훅 등록: ~/.claude/settings.json에 자동으로 등록됨
+- ✅ 중복 제거: 같은 prompt+complaint 쌍은 한 번만 카운트
 
 ---
 
