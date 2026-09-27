@@ -7,12 +7,39 @@
 - **200k**: 정리 후 handoff 파일 작성 (입력 잠금)
 - **/compact**: 한 번 입력 → 자동으로 이어감 (새 대화 X)
 
-**세 플랫폼 모두 동일하게 작동합니다:**
-| 플랫폼 | 모델 | 기능 |
-|---|---|---|
-| **Claude Code** | Haiku, Sonnet, Opus, Fable | ✓ 200k 자동 감시, ✓ 실시간 모델 라우팅, ✓ VSCode 상태표시줄 |
-| **Antigravity** | Gemini 3.1, 3.2, 3.8 | ✓ 200k 자동 감시, ✓ 실시간 모델 라우팅, ✓ 사용량 추적 |
-| **Codex** | Luna, Sol, Astra | ✓ 200k 자동 감시, ✓ 라우팅 (light/standard/complex), ✓ 파일 백업 |
+**플랫폼별 상태:**
+| 플랫폼 | 상태 | 모델 | 기능 |
+|---|---|---|---|
+| **Claude Code** | ✅ 완성 | Haiku, Sonnet, Opus, Fable | ✓ 200k 자동 감시, ✓ 실시간 모델 라우팅, ✓ VSCode 상태표시줄 |
+| **Antigravity** | ⚠️ 미완성 | Gemini 3.1, 3.2, 3.8 | ⚪ 200k 자동 감시, ⚪ 모델 라우팅 구조, ❌ 훅 미등록 |
+| **Codex** | ⚠️ 미완성 | Luna, Sol, Astra | ⚪ 200k 자동 감시, ⚪ 라우팅 구현, ❌ 수집기 미실행 |
+
+---
+
+## 🚀 현재 상태
+
+### Claude Code ✅ 완성
+- **200k 자동 감시**: UserPromptSubmit hook에서 실시간 모니터링
+- **handoff 자동 생성**: 200k 도달 시 자동으로 인수인계 파일 작성
+- **모델 라우팅**: 작업 난도별로 자동으로 최적 모델 제안
+- **VSCode 통합**: 상태표시줄에서 Claude context, AGY 5h 쿼터 실시간 표시
+- **설치**: `node install.js` 또는 Claude Code에 말하기
+
+### Antigravity ⚠️ 아직 미완성
+- ✓ 200k 자동 감시 기능 코드 구현됨
+- ✓ 모델 라우팅 구조 준비됨 (Gemini 3.1/3.2/3.8)
+- ✗ **settings.json 훅 미등록** - Antigravity에서 handoff.js가 실행되지 않음
+- ✗ **config.json 미등록** - 로컬 설정에 없음
+
+**다음 단계**: Antigravity settings에서 `handoff.js hook`, `route.js hook` 등록 필요
+
+### Codex ⚠️ 아직 미완성
+- ✓ 200k 자동 감시 기능 코드 구현됨 (hook.py)
+- ✓ 라우팅 구조 구현됨 (router.py)
+- ✗ **수집기 미실행** - 사용량 데이터가 없어서 hook이 동작하지 않음
+- ✗ **커맨드라인 테스트만 가능** - Codex IDE에서 실제 테스트 필요
+
+**다음 단계**: Codex 수집기 시작 후 실제 hook 동작 확인 필요
 
 ---
 
