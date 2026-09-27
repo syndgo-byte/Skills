@@ -194,14 +194,13 @@ async function hook() {
   const cur = currentTier(input.transcript_path, st);
   if (!cur) return;
   let d = await decide(prompt);
-  // One prompt alone can look light ("그래서 안 고칠 거야?"), but a run of problem reports in the
-  // same session means the conversation is a debugging session. Record raw verdicts, not the
-  // escalated ones, so the escalation fades once the problem reports stop.
-  const sess = input.session_id || input.transcript_path || '';
+  // One prompt alone can look light ("그래서 안 고칠 거야?"), but a run of problem reports
+  // means the user is in a debugging session. Record all prompts across all tabs/sessions,
+  // and keep on Opus if recent Opus-grade prompts keep coming in.
   const now = Date.now();
-  const recent = (st.recentRoutes || []).filter((r) => r.sess === sess && now - r.at < 20 * 60000).slice(-4);
+  const recent = (st.recentRoutes || []).filter((r) => now - r.at < 20 * 60000).slice(-4);
   const opusRuns = recent.filter((r) => r.route === 'opus').length;
-  st.recentRoutes = [...recent, { sess, at: now, route: d.route }];
+  st.recentRoutes = [...recent, { at: now, route: d.route }];
   state.save(st);
   if (d.route !== 'opus' && d.route !== 'fable' && opusRuns >= 2) {
     d = { ...d, route: 'opus', effort: 'medium', by: 'rules', why: `최근 ${recent.length}개 질문 중 ${opusRuns}개가 문제 제기 → opus 유지` };
