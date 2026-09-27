@@ -30,10 +30,7 @@ Extensions (Ctrl+Shift+X) → "Permission Manager" 검색 → Install
 
 ## 📸 사용 예제
 
-### 1. Permission Manager 사이드바
-![Permission Manager Sidebar](screenshot-example.png)
-
-### 2. Claude Code와 함께 실행
+### Claude Code와 함께 실행
 ![Claude Code + Permission Manager](screenshot-dialog.png)
 - 좌측: Permission Manager에서 요청 관리
 - 우측: Claude Code의 permission 승인 dialog
