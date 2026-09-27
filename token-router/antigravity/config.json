@@ -1,0 +1,20 @@
+{
+  "models": {
+    "light": {
+      "model": "gemini-3.1",
+      "effort": "low"
+    },
+    "standard": {
+      "model": "gemini-3.2",
+      "effort": "medium"
+    },
+    "complex": {
+      "model": "gemini-3.8",
+      "effort": "high"
+    }
+  },
+  "context_warning": 80000,
+  "context_handoff": 200000,
+  "max_file_mb": 100,
+  "max_snapshot_mb": 1000
+}
