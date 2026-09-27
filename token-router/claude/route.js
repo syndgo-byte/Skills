@@ -40,7 +40,9 @@ const SIGNALS = {
   ],
   opus: [
     [/설계|아키텍처|구조를?\s*(어떻게|잡)|트레이드오프|어떤\s*방식|어떻게\s*가져갈|고민|전략|계획\s*세워|보안|취약|무결성|성능\s*분석|버그/, 4],
-    [/왜\s*(이렇|안\s*되|안\s*돼|느려)|원인|근본|디버깅|가끔|재현/, 4],
+    [/왜\s*(이렇|안\s*되|안\s*돼|느려|멈|안)|원인|근본|디버깅|가끔|재현/, 4],
+    // Symptom reports ("안보임", "동작을 안하네", "0 됐잖아") are bug reports without the word 버그.
+    [/안\s*(되|돼|나와|나오|보여|보이|보임|뜨|떠|바뀌|넘어|고치|고칠)|(동작|작동)을?\s*안|멈춰|멈췄|먹통|깨져|깨졌|에러|오류|실패|\b0\s*(이\s*)?(됐|됬|돼|나와|으로)/, 4],
     [/\b(design|architecture|why (does|is)|root cause|trade-?offs?|which approach|strategy|security|vulnerab|race condition|deadlock|intermittent|flaky|debug|performance analysis|bug)\b/i, 4],
     [/애매|모호|확실하지|잘 모르|unclear|ambiguous|not sure/i, 3],
     [/전체\s*리팩터|대규모|여러\s*모듈|cross-cutting|large refactor|whole (app|system)/i, 3],
@@ -197,7 +199,19 @@ async function hook() {
   if (st.enabled === false || !prompt || prompt.startsWith('/')) return;
   const cur = currentTier(input.transcript_path, st);
   if (!cur) return;
-  const d = await decide(prompt);
+  let d = await decide(prompt);
+  // One prompt alone can look light ("그래서 안 고칠 거야?"), but a run of problem reports in the
+  // same session means the conversation is a debugging session. Record raw verdicts, not the
+  // escalated ones, so the escalation fades once the problem reports stop.
+  const sess = input.session_id || input.transcript_path || '';
+  const now = Date.now();
+  const recent = (st.recentRoutes || []).filter((r) => r.sess === sess && now - r.at < 20 * 60000).slice(-4);
+  const opusRuns = recent.filter((r) => r.route === 'opus').length;
+  st.recentRoutes = [...recent, { sess, at: now, route: d.route }];
+  state.save(st);
+  if (d.route !== 'opus' && d.route !== 'fable' && opusRuns >= 2) {
+    d = { ...d, route: 'opus', effort: 'medium', by: 'rules', why: `최근 ${recent.length}개 질문 중 ${opusRuns}개가 문제 제기 → opus 유지` };
+  }
   const ctx = require('./handoff').check(input.transcript_path);
   const context = ctx.error ? 0 : ctx.context;
   const dir = switchDirection(cur, d, st, context);

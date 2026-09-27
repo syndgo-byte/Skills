@@ -120,16 +120,31 @@ function updateClaudeTranscript(file: string, stat: fs.Stats) {
         }
       }
 
-      // 2. Read last 65536 bytes to extract latest context usage, model, and compact boundary
-      const tailLen = Math.min(65536, stat.size);
-      const tailOffset = Math.max(0, stat.size - tailLen);
-      const tailBuf = Buffer.alloc(tailLen);
-      fs.readSync(fd, tailBuf, 0, tailLen, tailOffset);
-      const tailLines = tailBuf.toString('utf8').split('\n');
+      // 2. Read the tail for the latest usage, model and compact boundary. Pasted screenshots make
+      // single lines hundreds of KB, so widen the window until an answer's usage line shows up.
+      let tailLines: string[] = [];
+      for (const want of [65536, 1 << 20, 8 << 20]) {
+        const tailLen = Math.min(want, stat.size);
+        const tailBuf = Buffer.alloc(tailLen);
+        fs.readSync(fd, tailBuf, 0, tailLen, stat.size - tailLen);
+        tailLines = tailBuf.toString('utf8').split('\n');
+        if (tailLen === stat.size || tailLines.some((l) => l.includes('"usage"') && l.includes('"assistant"'))) break;
+      }
       for (const line of tailLines) {
         if (!line) continue;
-        if (line.includes('compact_boundary')) {
-          t.context = 0;
+        if (line.includes('"compact_boundary"')) {
+          // Only a real system entry counts; tool output that merely mentions the word does not.
+          try {
+            const e = JSON.parse(line);
+            if (e.type === 'system' && e.subtype === 'compact_boundary') t.context = 0;
+          } catch { }
+        } else if (line.includes('"ai-title"') || line.includes('"custom-title"')) {
+          // Titles are re-appended through the session, so long transcripts only have them near the end.
+          try {
+            const e = JSON.parse(line);
+            if (e.type === 'ai-title' && e.aiTitle) t.aiTitle = e.aiTitle;
+            else if (e.type === 'custom-title' && e.customTitle) t.customTitle = e.customTitle;
+          } catch { }
         } else if (line.includes('"usage"')) {
           try {
             const e = JSON.parse(line);
@@ -153,7 +168,10 @@ function updateClaudeTranscript(file: string, stat: fs.Stats) {
 function scanClaudeTranscripts() {
   const now = Date.now();
   let dirs: string[] = [];
-  try { dirs = fs.readdirSync(CLAUDE_PROJECTS_DIR); } catch { return; }
+  try { dirs = fs.readdirSync(CLAUDE_PROJECTS_DIR); } catch {
+    // Don't clear cache on error — keep previous values even if CLAUDE_PROJECTS_DIR inaccessible
+    return;
+  }
 
   const candidates: { file: string; stat: fs.Stats }[] = [];
   for (const d of dirs) {
@@ -172,11 +190,12 @@ function scanClaudeTranscripts() {
     }
   }
 
-  // Sort descending by mtime and scan only the top 15 most recent files
-  candidates.sort((a, b) => b.stat.mtimeMs - a.stat.mtimeMs);
-  const topCandidates = candidates.slice(0, 15);
+  // Only update found files; don't clear cache if no candidates found
+  if (candidates.length === 0) return;
 
-  for (const item of topCandidates) {
+  // All recent files, not just the newest few: tabs restored in another folder can be days old.
+  // Unchanged files are skipped by the size/mtime check, so this is cheap after the first pass.
+  for (const item of candidates) {
     updateClaudeTranscript(item.file, item.stat);
   }
 }
