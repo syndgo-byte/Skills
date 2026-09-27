@@ -116,49 +116,85 @@ Claude: (handoff 읽고 자동으로 이어감)
 
 ### 모델 전환 규칙
 
-token-router는 **작업 난도**에 따라 자동으로 모델을 추천합니다. SIGNALS 패턴으로 판정합니다:
+token-router는 **작업 난도**에 따라 자동으로 모델을 추천합니다. SIGNALS 패턴으로 판정하며, **각 모델의 평균 신호 가중치**를 기준으로 강제 전환합니다:
 
 #### Haiku (조회, 확인, 요약)
 
-**신호:**
-- `검색|목록|나열|확인만|번역|뭐야|알려줘|보여줘`
-- `where is|search|grep|list|locate|count|translate|what does|look up|show me`
-- `찾아|읽어|요약|분류|설명해` (약한 신호)
-- `이름 바꿔|리네임|포맷|format|오타|typo|주석 달`
+**신호 가중치:** 평균 2.75
 
-**사용 조건:** 맥락 50k 이하, 명확한 판정
+| 신호 | 가중치 | 예시 |
+|---|---|---|
+| 조회/검색 | 3 | 검색, 목록, 나열, 몇 개, 확인만, 번역, 뭐야, 알려줘, 보여줘 |
+| 영어 조회 | 3 | where is, search, grep, list, locate, count, translate, what does, look up, show me |
+| 약한 신호 | 2 | 찾아, 읽어, 요약, 분류, 설명해 (다른 작업과 섞여있을 때만) |
+| 이름/형식 | 3 | 이름 바꿔, 리네임, rename, 포맷, format, 오타, typo, 주석 달 |
+
+**강제 전환:** margin ≥ 2 (맥락 크기 무관)
 
 #### Sonnet (구현, 테스트, 수정)
 
-**신호:**
-- `구현|추가|만들어|엔드포인트|컴포넌트|테스트|타입 힌트|변환|리팩터|정리|개선|최적화|배포`
-- `implement|add|build|feature|endpoint|component|update|tests|type hints|convert|bulk|refactor|clean up|improve|optimize|deploy`
-- `수정|고쳐` (단순한 버그 수정)
-- `스크립트|엑셀|csv|파싱|집계|계산`
+**신호 가중치:** 평균 1.75
 
-**사용 조건:** 구현 범위가 명확함
+| 신호 | 가중치 | 예시 |
+|---|---|---|
+| 한글 구현 | 1 | 구현, 추가, 컴포넌트, 테스트, 타입 힌트, 리팩터, 정리, 개선, 최적화, 배포 |
+| 영어 구현 | 3 | implement, add, build, feature, endpoint, component, update, tests, type hints, convert, bulk, refactor, clean up, improve, optimize, deploy |
+| 버그 수정 | 1 | 수정, 고쳐, fix (원인이 명확한 경우만) |
+| 데이터 처리 | 2 | 스크립트, 엑셀, CSV, 파싱, 집계, 합계, 계산, 정산 |
+
+**강제 전환:** margin ≥ 2 (맥락 크기 무관)
+**특징:** Opus 신호가 있으면 무시 (디버깅/설계 우선)
 
 #### Opus (설계, 원인 분석, 보안, 디버깅)
 
-**신호:**
-- `설계|아키텍처|구조|트레이드오프|고민|전략|계획|보안|취약|무결성|성능 분석|버그`
-- `design|architecture|why|root cause|trade-offs|security|vulnerab|debug|performance analysis|bug`
-- `왜 이렇|안 되|원인|근본|디버깅|가끔|재현`
-- `애매|모호|확실하지 않|전체 리팩터|대규모`
+**신호 가중치:** 평균 3.6
 
-**사용 조건:** 모호함, 깊이 필요, 대규모 변경
+| 신호 | 가중치 | 예시 |
+|---|---|---|
+| 설계/보안 | 4 | 설계, 아키텍처, 구조, 트레이드오프, 어떤 방식, 고민, 전략, 계획, 보안, 취약, 무결성, 성능 분석, 버그 |
+| 원인 분석 | 4 | 왜 이렇, 안 되, 왜 느려, 원인, 근본, 디버깅, 가끔, 재현 |
+| 영어 고급 | 4 | design, architecture, why (does/is), root cause, trade-offs, which approach, strategy, security, vulnerab, race condition, deadlock, intermittent, flaky, debug, performance analysis, bug |
+| 모호함 | 3 | 애매, 모호, 확실하지, 잘 모르, unclear, ambiguous, not sure |
+| 대규모 | 3 | 전체 리팩터, 대규모, 여러 모듈, cross-cutting, large refactor, whole (app\|system) |
+
+**강제 전환:** margin ≥ 2 (맥락 크기 무관)
+**특징:** 가장 높은 가중치 (평균 3.6) → 한 신호만 있어도 강제
 
 #### Fable (장시간 자동화)
 
-**신호:**
-- `몇 시간|장시간|밤새|끝까지 알아서|전부 다 만들어|처음부터 끝까지`
-- `long-running|end to end|overnight|from scratch`
+**신호 가중치:** 평균 4.0
 
-**사용 조건:** 여러 시간의 독립적 작업
+| 신호 | 가중치 | 예시 |
+|---|---|---|
+| 장시간 작업 | 4 | 몇 시간, 장시간, 밤새, 끝까지 알아서, 전부 다 만들어, 처음부터 끝까지, long-running, end to end, overnight, from scratch |
+
+**강제 전환:** Fable 신호 감지 시 (allow-fable 플래그 활성화된 경우)
+**특징:** 사용 가능 여부를 명시적으로 제어 (`node route.js --fable on`)
+
+### 강제 전환 기준 (Margin Rule)
+
+**핵심:** 최상위 모델 점수 - 2위 모델 점수 **≥ 2**
+
+```
+예시 1: Haiku 신호 명확
+  task: "이 파일 검색해줘"
+  scores: { haiku: 3, sonnet: 0, opus: 0, fable: 0 }
+  margin: 3 - 0 = 3 ≥ 2 → ✓ Haiku 강제 추천
+
+예시 2: Opus 신호 약함
+  task: "뭐가 문제일까"
+  scores: { haiku: 0, sonnet: 0, opus: 3, fable: 0 }
+  margin: 3 - 0 = 3 ≥ 2 → ✓ Opus 강제 추천
+
+예시 3: 모호함 (강제 없음)
+  task: "이 코드를 더 좋게 만들어줘"
+  scores: { haiku: 0, sonnet: 2, opus: 1, fable: 0 }
+  margin: 2 - 1 = 1 < 2 → ✗ 기본값(Sonnet) 사용, 제안 없음
+```
 
 ### 모델 전환 방법
 
-1. **훅이 질문을 막고 제안 표시**
+1. **훅이 질문을 막고 제안 표시** (margin ≥ 2일 때만)
    ```
    [token-router] 이 작업은 haiku / low 로 충분합니다 (현재 opus).
    → 바꾸기: /model 에서 haiku 선택 후 같은 질문을 다시 보내세요.
