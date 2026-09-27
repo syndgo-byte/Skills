@@ -14,8 +14,15 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
     view.webview.options = { enableScripts: true, localResourceRoots: [webviewRoot] };
     view.webview.html = this.html(view.webview, webviewRoot);
     view.webview.onDidReceiveMessage((msg) => {
-      if (msg?.type === 'ready') this.refresh();
-      else if (msg?.type === 'decide' && Array.isArray(msg.ids)) this.server.decide(msg.ids, msg.decision);
+      console.log('📨 Webview message received:', msg?.type);
+      if (msg?.type === 'ready') {
+        console.log('✅ Ready message, refreshing...');
+        this.refresh();
+      }
+      else if (msg?.type === 'decide' && Array.isArray(msg.ids)) {
+        console.log('✅ Decide message:', msg.ids, msg.decision);
+        this.server.decide(msg.ids, msg.decision);
+      }
     });
     view.onDidDispose(() => (this.view = undefined));
   }

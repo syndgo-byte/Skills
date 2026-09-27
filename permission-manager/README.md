@@ -30,6 +30,14 @@ Extensions (Ctrl+Shift+X) → "Permission Manager" 검색 → Install
 
 ## 📸 사용 예제
 
+### 1. Permission Manager 사이드바
+![Permission Manager Sidebar](screenshot-example.png)
+
+### 2. Claude Code와 함께 실행
+![Claude Code + Permission Manager](screenshot-dialog.png)
+- 좌측: Permission Manager에서 요청 관리
+- 우측: Claude Code의 permission 승인 dialog
+
 ### 1️⃣ 사이드바 아이콘으로 열기
 - Activity Bar 좌측에서 **🔐 Lock 아이콘** 클릭
 - Permission Manager Sidebar가 열림
@@ -37,7 +45,7 @@ Extensions (Ctrl+Shift+X) → "Permission Manager" 검색 → Install
 ### 2️⃣ 권한 요청 자동 수집
 Claude Code (또는 다른 도구)에서 permission이 필요한 작업 실행 시:
 ```bash
-echo "test"  # 또는 다른 명령
+cd "D:\skills\permission-manager" && npm run compile
 ```
 ↓
 Permission Manager 사이드바에 **실시간으로 요청 표시**
