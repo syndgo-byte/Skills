@@ -2,7 +2,14 @@ node_modules/
 dist/
 *.log
 .DS_Store
+__pycache__/
+.handoff/
+backup-claude/
+_archive/
+handoff-*.md
+codex/backups/
+codex/validation/
+*.vsix
+.env
 token-router-vscode/
-extension/.handoff/
 extension/resources/
-extension/handoff-*.md

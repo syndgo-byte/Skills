@@ -1,0 +1,6 @@
+interface:
+  display_name: "Codex Token Router"
+  short_description: "Codex 토큰 절약, 모델 추천, 작업 인수인계와 변경 파일 백업"
+  default_prompt: "$token-router를 사용해 작업을 효율적으로 진행하고 필요하면 인수인계를 작성해줘."
+policy:
+  allow_implicit_invocation: true

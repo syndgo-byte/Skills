@@ -1,0 +1,20 @@
+{
+  "models": {
+    "light": {
+      "model": "gpt-6-luna",
+      "effort": "low"
+    },
+    "standard": {
+      "model": "gpt-6-sol",
+      "effort": "medium"
+    },
+    "complex": {
+      "model": "gpt-6-astra",
+      "effort": "high"
+    }
+  },
+  "context_warning": 80000,
+  "context_handoff": 200000,
+  "max_file_mb": 50,
+  "max_snapshot_mb": 500
+}
