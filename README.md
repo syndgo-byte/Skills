@@ -1,20 +1,76 @@
-# Claude_Skills
+# Skills
 
-개인 Claude Code 스킬·도구 모음. 하나씩 폴더로 관리.
+개인 AI/개발 도구 모음
 
-## 목록
+## 폴더 구조
 
-- [token-router](token-router/) — Claude 스킬. 작업을 시작하기 전에 가장 싼 Claude 모델(haiku/sonnet/opus/fable)을 골라 그 모델의 하위 에이전트로 위임. 로컬 규칙 우선, 애매하면 무료 AI(키 불필요)로 판정. 판정 자체는 Claude 토큰을 쓰지 않음.
-- [claude-plugin-manager](claude-plugin-manager/) — VS Code 확장. 사이드바에서 Claude Code 플러그인을 켜고 끄고, 설명을 한글로 보고, 인기 스킬을 추천받고, 실제 사용 빈도를 분석해 안 쓰는 플러그인 정리를 도움.
-- [free-ai-offers](free-ai-offers/) — VS Code 확장. 무료 AI/LLM 혜택과 마감일을 추적(OpenRouter, Vercel AI Gateway, 공식 변경 기록, 뉴스, YouTube). Claude 토큰을 쓰지 않음.
-- [plugin-profiler](plugin-profiler/) — `SessionStart` 훅. 세션이 열릴 때마다 프로젝트별 실제 사용 이력(로컬 대화 기록)과 파일 종류를 보고 `enabledPlugins`를 자동으로 맞춤. 무거운 플러그인(스킬 15개 이상, 매 도구 호출마다 도는 훅)은 실사용 증거 있을 때만 켬. LLM 호출 없음.
+```
+Skills/
+├── token-router/          ⭐ 메인: Claude Code/Antigravity/Codex 토큰 라우팅
+│   ├── extension/         VSCode 확장 (Claude context + AGY 쿼터 표시)
+│   ├── claude/            Claude Code 스킬 ✅ 완성
+│   ├── antigravity/       Antigravity 스킬 ⚠️ 미완성
+│   └── codex/             Codex 스킬 ⚠️ 미완성
+├── usage/
+│   └── codex/             Codex 사용량 수집기
+├── Claude_Skills/         Claude Code 플러그인 모음
+│   ├── plugin-profiler    turn budget & 성능 프로파일링
+│   ├── claude-plugin-manager
+│   ├── free-ai-offers
+│   └── token-audit
+├── Codex_Skills/          (비어 있음)
+└── Antigravity_Skills/    (비어 있음)
+```
 
-## 설치
+## token-router
 
-- Claude 스킬(`SKILL.md` 있는 폴더): 그 폴더의 `node install.js` 실행 → `~/.claude/skills/<이름>`에 복사, 새 Claude 세션부터 적용.
-- VS Code 확장(`package.json`이 있고 `main`이 `extension.js`인 폴더): 해당 폴더에서
-  ```
-  npx @vscode/vsce package --allow-missing-repository
-  code --install-extension <이름>-<버전>.vsix --force
-  ```
-- 훅(`plugin-profiler`): `~/.claude/settings.json`의 `hooks`에 등록. 각 폴더 README 참고.
+> **Claude Code · Antigravity · Codex** 에서 200k context 도달 시 자동으로 정리해서 다음 세션으로 넘기는 토큰 관리 시스템
+
+### 플랫폼별 상태
+
+| 플랫폼 | 상태 | 기능 |
+|---|---|---|
+| **Claude Code** | ✅ 완성 | • 200k 자동 감시 • 실시간 handoff 파일 생성 • 모델 라우팅 • VSCode 상태표시줄 |
+| **Antigravity** | ⚠️ 미완성 | • 코드 준비됨 • 훅 미등록 |
+| **Codex** | ⚠️ 미완성 | • 코드 준비됨 • 수집기 미실행 |
+
+### Claude Code 설치
+
+```bash
+cd token-router/claude
+node install.js
+```
+
+### 사용 방법
+
+1. 대화 진행 중 context가 80k에 도달하면 ⚠️ 경고
+2. 200k 도달하면 📝 자동으로 인수인계 파일 생성
+3. `/compact` 입력 → 압축 완료 후 자동으로 이어감
+
+→ 더 자세한 내용: [`token-router/README.md`](token-router/README.md) 또는 [`token-router/claude/README.md`](token-router/claude/README.md)
+
+---
+
+## Claude_Skills
+
+Claude Code 플러그인 & 성능 도구
+
+- **plugin-profiler**: turn budget 계산 + 성능 프로파일링
+- **claude-plugin-manager**: 플러그인 관리
+- **token-audit**: 토큰 사용량 분석
+- **free-ai-offers**: 무료 AI 서비스 목록
+
+---
+
+## usage/codex
+
+Codex 사용량 실시간 수집기
+
+- 실행: D:/Skills/usage/codex/start.ps1
+- 중지: D:/Skills/usage/codex/stop.ps1
+
+---
+
+## 라이선스
+
+개인 용도
