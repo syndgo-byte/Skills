@@ -192,6 +192,74 @@ token-router는 **작업 난도**에 따라 자동으로 모델을 추천합니�
   margin: 2 - 1 = 1 < 2 → ✗ 기본값(Sonnet) 사용, 제안 없음
 ```
 
+---
+
+## 🤖 Auto-Learning System (자동 학습)
+
+token-router는 **매시간마다** 실제 라우팅 결정을 분석해서 신호 가중치를 자동으로 조정합니다.
+
+### 작동 흐름
+
+```
+✅ 매 질문마다
+   └─ route.js: 신호 점수 계산 + signals-log.jsonl 기록
+
+✅ VSCode 켤 때마다  
+   └─ SessionStart: learn.js start (준비 메시지)
+
+✅ 매시간 정각 :07분
+   └─ CronCreate: learn.js --apply
+      ├─ 지난 1시간 데이터 분석
+      ├─ 신호별 정확도 계산
+      └─ signals.json 자동 업데이트
+
+✅ Noise Filtering (진동 방지)
+   ├─ 7일 쿨다운 (같은 신호 재조정 금지)
+   ├─ 70% 정확도 이상만 (낮은 신뢰도 무시)
+   └─ 3회 이상 일관성 (한두 번 실수로 조정 X)
+```
+
+### 학습 메커니즘
+
+1. **데이터 수집** (`signals-log.jsonl`)
+   - 모든 라우팅 결정 기록: 타임스탐프, 신호, 점수, 선택 모델, 결과
+
+2. **신호별 정확도 계산** (hourly)
+   - "opus: 설계" 신호 → 실제 Opus로 갔나? → 정확도 계산
+   - "haiku: 검색" 신호 → 실제 Haiku로 갔나? → 정확도 계산
+
+3. **가중치 조정 (신뢰도 높을 때만)**
+   - 정확도 70% 이상 + 7일 이내 미조정 + 3회 이상 히트 → 가중치 ±0.5 조정
+   - 변경 이력: `signal-weights-history.json` 에 타임스탐프 + 이유 기록
+
+4. **signals.json 자동 업데이트**
+   - 모든 가중치 조정이 즉시 반영 → route.js가 동적으로 로드
+
+### 설정 값 (claude/learn.js)
+
+```javascript
+const CONFIG = {
+  lookbackHours: 1,        // 1시간 데이터 분석
+  accuracyThreshold: 0.70, // 70% 이상 정확도만 반영
+  minHits: 3,              // 최소 3회 히트 필요
+  cooldownDays: 7,         // 7일 쿨다운
+  maxWeightChange: 0.5,    // 한 번에 ±0.5만 조정
+};
+```
+
+### 수동 확인
+
+```bash
+# learn.js 상태 확인
+node claude/learn.js start
+
+# 지난 1시간 데이터 분석 및 제안 보기
+node claude/learn.js --apply
+
+# 신호별 가중치 변경 이력 확인
+cat ../data/signal-weights-history.json
+```
+
 ### 모델 전환 방법
 
 1. **훅이 질문을 막고 제안 표시** (margin ≥ 2일 때만)
