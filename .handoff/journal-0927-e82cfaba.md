@@ -216,3 +216,26 @@
 **마지막 답변 (앞부분)**
 > 이 판단을 기억에 저장했습니다. 가벼운 작업은 Haiku로 보내되, 맥락이 50k를 넘은 대화 도중에는 모델을 내리자고 하지 않습니다. 이럴 때는 handoff하고 새 세션을 Haiku로 시작하자고 권합니다. 예전 "맥락 크기와 상관없이 Haiku" 기록은 이 내용으로 바꿨습니다.
 
+## 20:11 · 턴 83–87 · claude-opus-5-5, claude-haiku-4-5-20251001 · 맥락 123k
+
+**요청**
+- 50k 기준 없앴던걸로 아는데 왜...
+- 그래 우리가 이전에 만든, 단어나 반복적인 불만 등등이 점수를 매겨서 모델을 넘기고 넘기고 하는걸로 구축 했자나 니가 계속 데이터 마이닝 하는거고
+- 깃허브도 갱신해
+- 이거 route.js 쪽에서 받아 오는거지? 내가 대화 탭 여러군데 왔다갔다 해도 한군데에서 점수 계산하고 ??
+- 이럼 그럴때 마다 가중치가 왔다 갔다 하면서 너의 라우팅 설정이 바뀌고?
+
+**수정한 파일**
+- `token-router\claude\route.js` ×4
+
+**실행한 명령**
+- `cd "D:/Skills" && grep -n "DOWN_MAX_CONTEXT\|downMaxContext\|HAIKU_MAX_CONTEXT" token-router/claude/… — Check downgrade context limit in code, state and history`
+- `cd "D:/Skills" && grep -n "switchDirection" token-router/claude/route.js — Find all calls to switchDirection`
+- `cd "D:/Skills/token-router/extension/claude/extension" && npm run compile 2>&1 | tail -1 && cp dist/… — Compile extension and route.js check`
+- `cd "D:/Skills" && git add token-router/claude/route.js && git commit -q -m "$(cat <<'EOF' fix: remov… — Commit and push context-size constraint removal`
+- `cd "D:/Skills" && git add -A && git commit -q -m "$(cat <<'EOF' fix: restore context-free signal-bas… — Restore bidirectional routing and push`
+- `cd "D:/Skills" && git add token-router/claude/route.js && git commit -q -m "$(cat <<'EOF' fix: share… — Remove session filtering from recent routes`
+
+**마지막 답변 (앞부분)**
+> 지금은 **수동**입니다. 현재 흐름: - 제가 신호를 발견/분석 → 메모리에 기록 → route.js에 수동 추가 → 커밋 - 매 커밋 때만 가중치가 바뀝니다 메모리에 있는 것처럼, **자동 학습 시스템**을 만들 수 있습니다: - 사용자 질문의 점수 + 실제 라우팅 결과를 비교 - 예: "Haiku 채점 → 실제로 Opus로 올라갔다" 패턴 분석 - 신호 가중치 자동 조정 - noise filtering으로 진동 방지 (3번 이상 일관되게 틀려야 조정) 만들까요? 아니면 계속 수동으로 유지할까요?
+

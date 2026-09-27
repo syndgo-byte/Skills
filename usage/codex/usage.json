@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-09-27T11:08:14.596Z",
+  "updated_at": "2026-09-27T11:17:01.787Z",
   "collector_pid": 14832,
   "status": "running",
   "poll_interval_ms": 1000,
