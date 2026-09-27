@@ -1,0 +1,58 @@
+{
+  "name": "vscode-permission-manager",
+  "displayName": "Permission Manager",
+  "description": "Approve Claude Code permission requests from a sidebar, one by one or all at once",
+  "version": "0.2.0",
+  "publisher": "user",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "permissionManagerContainer",
+          "title": "Permission Manager",
+          "icon": "$(lock)"
+        }
+      ]
+    },
+    "views": {
+      "permissionManagerContainer": [
+        {
+          "id": "permissionManagerView",
+          "name": "Claude Code 허가",
+          "type": "webview"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "permissionManager.open",
+        "title": "Open Permission Manager"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc",
+    "watch": "tsc -w",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.3.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/syndgo-byte/Skills"
+  },
+  "license": "MIT"
+}

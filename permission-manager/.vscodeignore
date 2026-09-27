@@ -1,0 +1,10 @@
+src/**
+test/**
+node_modules/**
+backup-claude/**
+.superpowers/**
+.handoff/**
+D:*/**
+*.vsix
+tsconfig.json
+package-lock.json
