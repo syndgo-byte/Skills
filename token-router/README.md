@@ -35,9 +35,14 @@ token-router/
 │   ├── state.js               라우팅 통계 + 로깅
 │   ├── journal.js             세션 일지 자동 기록
 │   ├── context-monitor.js     실시간 context 표시
+│   ├── learn.js               신호 가중치 자동 최적화
+│   ├── signals.json           신호 규칙 & 가중치 (동적 로드)
 │   ├── install.js             설치/업데이트 스크립트
 │   ├── README.md              상세 사용법 및 설정
 │   └── SKILL.md               Claude 작업 규칙
+├── data/                      (자동 학습 데이터)
+│   ├── signals-log.jsonl      모든 라우팅 결정 기록 (타임스탐프, 신호, 점수, 결과)
+│   └── signal-weights-history.json  신호 가중치 변경 이력 (시각, 변경값, 정확도, 이유)
 ├── antigravity/               (Antigravity 스킬 ⚠️ 미완성)
 │   ├── scripts/
 │   │   ├── handoff.js         (구현됨)
@@ -357,14 +362,16 @@ Antigravity 설정에서 `handoff.js hook`, `route.js hook` 등록 필요
 | 파일 | 역할 |
 |---|---|
 | `handoff.js` | 맥락 크기 측정 + 80k/200k 알림 + 자동 인수인계 파일 생성 |
-| `route.js` | 작업 난도 판정 + 최적 모델 추천 (SIGNALS 규칙 사용) |
+| `route.js` | 작업 난도 판정 + 최적 모델 추천 (signals.json 규칙 사용) |
+| `signals.json` | 신호 패턴 & 가중치 (정규식 + 점수) — learn.js가 시간마다 자동 조정 |
 | `state.js` | 라우팅 통계 + 로그 관리 |
 | `journal.js` | 세션 일지 자동 기록 |
 | `context-monitor.js` | 실시간 context 표시 (상태표시줄 & 터미널) |
+| `learn.js` | 신호 가중치 자동 최적화 (시간 단위 분석 + 정확도 기반 조정) |
 | `snapshot.js` | handoff 직전 변경된 파일 자동 백업 |
 | `install.js` | 설치·업데이트·제거 |
-| `learn.js` | 사용자 피드백 학습 및 규칙 개선 |
 | `SKILL.md` | Claude Code 작업 규칙 및 제약 사항 |
+| **data/** | 자동 학습 데이터 (signals-log.jsonl + signal-weights-history.json) |
 
 ---
 
