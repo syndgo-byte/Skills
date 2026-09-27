@@ -133,13 +133,13 @@ token-router는 **작업 난도**에 따라 자동으로 모델을 추천합니�
 
 #### Sonnet (구현, 테스트, 수정)
 
-**신호 가중치:** 평균 1.75
+**신호 가중치:** 평균 2.25 (Haiku와 Opus의 중간)
 
 | 신호 | 가중치 | 예시 |
 |---|---|---|
-| 한글 구현 | 1 | 구현, 추가, 컴포넌트, 테스트, 타입 힌트, 리팩터, 정리, 개선, 최적화, 배포 |
+| 한글 구현 | 2 | 구현, 추가, 컴포넌트, 테스트, 타입 힌트, 리팩터, 정리, 개선, 최적화, 배포 |
 | 영어 구현 | 3 | implement, add, build, feature, endpoint, component, update, tests, type hints, convert, bulk, refactor, clean up, improve, optimize, deploy |
-| 버그 수정 | 1 | 수정, 고쳐, fix (원인이 명확한 경우만) |
+| 버그 수정 | 2 | 수정, 고쳐, fix (원인이 명확한 경우만) |
 | 데이터 처리 | 2 | 스크립트, 엑셀, CSV, 파싱, 집계, 합계, 계산, 정산 |
 
 **강제 전환:** margin ≥ 2 (맥락 크기 무관)
