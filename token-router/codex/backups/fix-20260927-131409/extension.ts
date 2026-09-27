@@ -1,0 +1,478 @@
+import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
+
+// --- Paths ---
+const CLAUDE_PROJECTS_DIR = path.join(os.homedir(), '.claude', 'projects');
+const AGY_BRAIN_DIR = path.join(os.homedir(), '.gemini', 'antigravity', 'brain');
+const CLAUDE_VIEW_TYPE = 'claudeVSCodePanel';
+const SCAN_MAX_AGE = 7 * 24 * 3600 * 1000;
+
+const CLAUDE_STATE_FILE = path.join(os.homedir(), '.claude', 'token-router', 'state.json');
+
+function limits(): { threshold: number; loop: number } {
+  let st: any = {};
+  try { st = JSON.parse(fs.readFileSync(CLAUDE_STATE_FILE, 'utf8')); } catch { }
+  return { threshold: st.handoffTokens || 80000, loop: st.loopTokens || 200000 };
+}
+
+// --- Interfaces ---
+interface Transcript {
+  size: number;
+  mtime: number;
+  leftover: string;
+  aiTitle: string;
+  customTitle: string;
+  context: number;
+  model: string;
+}
+
+interface TabStatus {
+  source: 'claude' | 'antigravity';
+  label: string;
+  active: boolean;
+  matched: boolean;
+  context: number;
+  model: string;
+  emoji: string;
+  color: string;
+  percent: number;
+  loop: number;
+  atLoop: boolean;
+}
+
+interface AntigravitySession {
+  id: string;
+  title: string;
+  model: string;
+  tokens: number;
+  bytes: number;
+  mtime: number;
+  emoji: string;
+  color: string;
+  percent: number;
+  recommendation: string;
+}
+
+const COLORS: { [emoji: string]: string } = {
+  '🟢': '#22c55e',
+  '🟡': '#eab308',
+  '🟠': '#f97316',
+  '🔴': '#ef4444',
+};
+
+const ICONS: { [emoji: string]: string } = {
+  '🟢': '$(circle-filled)',
+  '🟡': '$(warning)',
+  '🟠': '$(circle-outline)',
+  '🔴': '$(error)',
+};
+
+const fmt = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : `${n}`);
+
+// --- Claude Scanner ---
+const transcripts = new Map<string, Transcript>();
+
+function updateTranscript(file: string, stat: fs.Stats) {
+  let t = transcripts.get(file);
+  if (t && t.size === stat.size && t.mtime === stat.mtimeMs) return;
+  if (!t || stat.size < t.size) {
+    t = { size: 0, mtime: 0, leftover: '', aiTitle: '', customTitle: '', context: 0, model: '' };
+    transcripts.set(file, t);
+  }
+  const len = stat.size - t.size;
+  if (len > 0) {
+    const fd = fs.openSync(file, 'r');
+    try {
+      const buf = Buffer.alloc(len);
+      fs.readSync(fd, buf, 0, len, t.size);
+      const lines = (t.leftover + buf.toString('utf8')).split('\n');
+      t.leftover = lines.pop() || '';
+      for (const line of lines) parseLine(t, line);
+    } finally {
+      fs.closeSync(fd);
+    }
+  }
+  t.size = stat.size;
+  t.mtime = stat.mtimeMs;
+}
+
+function parseLine(t: Transcript, line: string) {
+  if (!line) return;
+  let e: any;
+  try { e = JSON.parse(line); } catch { return; }
+  if (e.type === 'ai-title' && e.aiTitle) t.aiTitle = e.aiTitle;
+  else if (e.type === 'custom-title' && e.customTitle) t.customTitle = e.customTitle;
+  else if (e.subtype === 'compact_boundary') t.context = 0;
+  else if (e.type === 'assistant' && e.message?.usage) {
+    const u = e.message.usage;
+    t.context = (u.input_tokens || 0) + (u.cache_read_input_tokens || 0) + (u.cache_creation_input_tokens || 0);
+    t.model = e.message.model || t.model;
+  }
+}
+
+function scanClaudeTranscripts() {
+  const now = Date.now();
+  let dirs: string[] = [];
+  try { dirs = fs.readdirSync(CLAUDE_PROJECTS_DIR); } catch { return; }
+  for (const d of dirs) {
+    const dir = path.join(CLAUDE_PROJECTS_DIR, d);
+    let files: string[] = [];
+    try { files = fs.readdirSync(dir); } catch { continue; }
+    for (const f of files) {
+      if (!f.endsWith('.jsonl')) continue;
+      const full = path.join(dir, f);
+      try {
+        const stat = fs.statSync(full);
+        if (now - stat.mtimeMs > SCAN_MAX_AGE && !transcripts.has(full)) continue;
+        updateTranscript(full, stat);
+      } catch { }
+    }
+  }
+}
+
+function openClaudeTabs(): { label: string; active: boolean }[] {
+  const tabs: { label: string; active: boolean }[] = [];
+  for (const group of vscode.window.tabGroups.all) {
+    for (const tab of group.tabs) {
+      const input = tab.input;
+      if (input instanceof vscode.TabInputWebview && input.viewType.endsWith(CLAUDE_VIEW_TYPE)) {
+        tabs.push({ label: tab.label, active: tab.isActive && group.isActive });
+      }
+    }
+  }
+  return tabs;
+}
+
+function statusForClaude(tab: { label: string; active: boolean }, threshold: number, loop: number): TabStatus {
+  const label = tab.label.trim();
+  const cut = label.replace(/(\.\.\.|…)$/, '').trim();
+  const isCut = cut !== label;
+  let best: Transcript | undefined;
+  for (const t of transcripts.values()) {
+    const title = (t.customTitle || t.aiTitle).trim();
+    if (!title) continue;
+    const hit = title === label || (isCut && title.startsWith(cut));
+    if (hit && (!best || t.mtime > best.mtime)) best = t;
+  }
+  const context = best ? best.context : 0;
+  const model = best ? best.model : '';
+  const emoji = context >= loop ? '🔴' : context >= threshold ? '🟠' : context >= threshold * 0.875 ? '🟡' : '🟢';
+  return {
+    source: 'claude',
+    label: tab.label,
+    active: tab.active,
+    matched: !!best,
+    context,
+    model,
+    emoji,
+    color: COLORS[emoji],
+    percent: Math.round((context / loop) * 100),
+    loop,
+    atLoop: context >= loop,
+  };
+}
+
+// --- Antigravity Scanner ---
+function scanAntigravitySession(): AntigravitySession | null {
+  try {
+    if (!fs.existsSync(AGY_BRAIN_DIR)) return null;
+    const dirs = fs.readdirSync(AGY_BRAIN_DIR);
+    let latest: { id: string; file: string; stat: fs.Stats } | null = null;
+
+    for (const d of dirs) {
+      if (d === 'tempmediaStorage') continue;
+      const logDir = path.join(AGY_BRAIN_DIR, d, '.system_generated', 'logs');
+      const candidateFull = path.join(logDir, 'transcript_full.jsonl');
+      const candidateNorm = path.join(logDir, 'transcript.jsonl');
+      const targetFile = fs.existsSync(candidateFull) ? candidateFull : (fs.existsSync(candidateNorm) ? candidateNorm : null);
+      if (!targetFile) continue;
+
+      try {
+        const stat = fs.statSync(targetFile);
+        if (!latest || stat.mtimeMs > latest.stat.mtimeMs) {
+          latest = { id: d, file: targetFile, stat };
+        }
+      } catch { }
+    }
+
+    if (!latest) return null;
+
+    // Tokens estimate: ~3.8 bytes per token for typical mixed Korean/English code context
+    const tokens = Math.round(latest.stat.size / 3.8);
+    const maxTokens = 200000;
+    const percent = Math.min(100, Math.round((tokens / maxTokens) * 100));
+
+    let title = `Session ${latest.id.slice(0, 8)}`;
+    let model = 'Gemini 3.8 Flash';
+
+    try {
+      const fd = fs.openSync(latest.file, 'r');
+      const readBuf = Buffer.alloc(Math.min(4096, latest.stat.size));
+      fs.readSync(fd, readBuf, 0, readBuf.length, 0);
+      fs.closeSync(fd);
+
+      const headText = readBuf.toString('utf8');
+      const userReqMatch = headText.match(/<USER_REQUEST>([\s\S]*?)<\/USER_REQUEST>/);
+      if (userReqMatch && userReqMatch[1]) {
+        const firstLine = userReqMatch[1].trim().split('\n')[0].trim();
+        if (firstLine) title = firstLine.slice(0, 35);
+      }
+      const modelMatch = headText.match(/Model Selection` from \w+ to ([^.]+)\./);
+      if (modelMatch && modelMatch[1]) {
+        model = modelMatch[1].trim();
+      }
+    } catch { }
+
+    const emoji = tokens >= 200000 ? '🔴' : tokens >= 150000 ? '🟠' : tokens >= 100000 ? '🟡' : '🟢';
+    const recommendation = tokens >= 200000
+      ? 'Handoff 작성 및 세션 분리 필수'
+      : tokens >= 150000
+        ? '세션 분리 권장'
+        : '세션 정상 유지';
+
+    return {
+      id: latest.id,
+      title,
+      model,
+      tokens,
+      bytes: latest.stat.size,
+      mtime: latest.stat.mtimeMs,
+      emoji,
+      color: COLORS[emoji],
+      percent,
+      recommendation,
+    };
+  } catch {
+    return null;
+  }
+}
+
+
+// --- Codex hook telemetry (no prompt contents are stored) ---
+interface CodexStatus {
+  id: string; cwd?: string; model?: string; effort?: string;
+  context: number | null; window: number | null; updated: number;
+  blocked: boolean; message?: string;
+  recommendation?: { model: string; effort: string };
+}
+let statusBarCodex: vscode.StatusBarItem;
+const codexNotices = new Map<string, number>();
+function scanCodex(): CodexStatus[] {
+  const dir = path.join(process.env.CODEX_HOME || path.join(os.homedir(), '.codex'), 'token-router', 'sessions');
+  try {
+    return fs.readdirSync(dir).filter(f => f.endsWith('.json')).map(f => {
+      try { return JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')) as CodexStatus; }
+      catch { return null; }
+    }).filter((s): s is CodexStatus => !!s && Number.isFinite(s.updated) &&
+      Date.now() / 1000 - s.updated < 86400 &&
+      (!vscode.workspace.workspaceFolders?.length || vscode.workspace.workspaceFolders.some(w =>
+        !!s.cwd && (path.resolve(s.cwd).toLowerCase() === w.uri.fsPath.toLowerCase() ||
+        path.resolve(s.cwd).toLowerCase().startsWith(w.uri.fsPath.toLowerCase() + path.sep)))))
+      .sort((a, b) => b.updated - a.updated);
+  } catch { return []; }
+}
+
+// --- Status Bar Items ---
+let statusBarClaude: vscode.StatusBarItem;
+let statusBarAgy: vscode.StatusBarItem;
+let sideBarButton: vscode.StatusBarItem;
+let webviewProvider: TokenRouterWebviewProvider;
+
+export function activate(context: vscode.ExtensionContext) {
+  webviewProvider = new TokenRouterWebviewProvider();
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider('token-router-panel', webviewProvider)
+  );
+
+  sideBarButton = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+  sideBarButton.command = 'token-router.showPanel';
+  context.subscriptions.push(sideBarButton);
+
+  statusBarCodex = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 102);
+  statusBarCodex.command = "token-router.showPanel";
+  context.subscriptions.push(statusBarCodex);
+
+  // Status bar items
+  statusBarAgy = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 101);
+  statusBarAgy.command = 'token-router.showPanel';
+  context.subscriptions.push(statusBarAgy);
+
+  statusBarClaude = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+  statusBarClaude.command = 'token-router.showPanel';
+  context.subscriptions.push(statusBarClaude);
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('token-router.showPanel', () => {
+      vscode.commands.executeCommand('token-router-container.focus');
+    }),
+    vscode.window.tabGroups.onDidChangeTabs(() => update()),
+    vscode.window.tabGroups.onDidChangeTabGroups(() => update()),
+  );
+
+  update();
+  const interval = setInterval(update, 1000);
+  context.subscriptions.push({ dispose: () => clearInterval(interval) });
+}
+
+function update() {
+  const codexSessions = scanCodex();
+  const cx = codexSessions[0];
+  if (cx) {
+    statusBarCodex.text = (cx.blocked ? '$(warning)' : '$(hubot)') + ' Codex ' + (cx.context == null ? '?' : fmt(cx.context));
+    statusBarCodex.tooltip = (cx.model || '모델 미확인') + ' / ' + (cx.effort || '강도 미확인') + '\n' + (cx.message || '') + '\n마지막 입력 토큰 · 세션 ' + cx.id;
+    statusBarCodex.color = cx.blocked ? '#f97316' : undefined;
+    statusBarCodex.show();
+    if (cx.blocked && Date.now()/1000 - cx.updated < 30 && codexNotices.get(cx.id) !== cx.updated) {
+      codexNotices.set(cx.id, cx.updated);
+      void vscode.window.showWarningMessage(cx.message || 'Codex 모델 변경 권장');
+    }
+  } else { statusBarCodex.hide(); }
+  scanClaudeTranscripts();
+  const { threshold, loop } = limits();
+  const claudeTabs = openClaudeTabs().map((t) => statusForClaude(t, threshold, loop));
+  const currentClaude = claudeTabs.find((t) => t.active) || claudeTabs[0];
+
+  const agySession = scanAntigravitySession();
+
+  // 1. Antigravity Status Bar Update
+  if (agySession) {
+    const agyIcon = agySession.emoji === '🟢' ? '$(sparkle)' : ICONS[agySession.emoji];
+    statusBarAgy.text = `${agyIcon} AGY ${fmt(agySession.tokens)} (${agySession.percent}%)`;
+    statusBarAgy.tooltip = `Antigravity Session: ${agySession.title}\n`
+      + `Usage: ${fmt(agySession.tokens)} / 200k (${agySession.percent}%)\n`
+      + `Model: ${agySession.model}\n`
+      + `Status: ${agySession.recommendation}\n`
+      + `ID: ${agySession.id}`;
+    statusBarAgy.color = agySession.color;
+    statusBarAgy.show();
+  } else {
+    statusBarAgy.hide();
+  }
+
+  // 2. Claude Status Bar Update
+  if (currentClaude) {
+    const icon = ICONS[currentClaude.emoji];
+    const text = `${currentClaude.label}\n${fmt(currentClaude.context)} / ${fmt(currentClaude.loop)} (${currentClaude.percent}%)`;
+    sideBarButton.text = icon;
+    sideBarButton.tooltip = text;
+    statusBarClaude.text = `${icon} Claude ${fmt(currentClaude.context)} (${currentClaude.percent}%)`;
+    statusBarClaude.tooltip = `${text}\nModel: ${currentClaude.model || '-'}`;
+    statusBarClaude.color = currentClaude.color;
+    statusBarClaude.show();
+  } else {
+    statusBarClaude.hide();
+    if (!agySession) {
+      sideBarButton.text = '$(circle-slash)';
+      sideBarButton.tooltip = '열린 AI 세션 없음';
+    } else {
+      sideBarButton.text = '$(sparkle)';
+      sideBarButton.tooltip = `AGY: ${agySession.title} (${fmt(agySession.tokens)})`;
+    }
+  }
+
+  sideBarButton.show();
+  webviewProvider.post({ agySession, claudeTabs, codexSessions });
+}
+
+class TokenRouterWebviewProvider implements vscode.WebviewViewProvider {
+  private view?: vscode.WebviewView;
+  private lastData: { agySession: AntigravitySession | null; claudeTabs: TabStatus[]; codexSessions: CodexStatus[] } = { agySession: null, claudeTabs: [], codexSessions: [] };
+
+  public resolveWebviewView(webviewView: vscode.WebviewView) {
+    this.view = webviewView;
+    webviewView.webview.options = { enableScripts: true };
+    webviewView.webview.html = HTML;
+    webviewView.onDidChangeVisibility(() => this.post(this.lastData));
+    this.post(this.lastData);
+  }
+
+  public post(data: { agySession: AntigravitySession | null; claudeTabs: TabStatus[]; codexSessions: CodexStatus[] }) {
+    this.lastData = data;
+    this.view?.webview.postMessage(data);
+  }
+}
+
+const HTML = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #e0e0e0; padding: 12px; }
+  .section-title { font-size: 11px; text-transform: uppercase; color: #888; font-weight: bold; margin: 12px 0 6px 0; letter-spacing: 0.5px; }
+  .card { background: #252526; border: 1px solid #3e3e42; border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+  .card.active { border-color: #4ec9b0; }
+  .card.agy { border-left: 4px solid #38bdf8; }
+  .head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .title { font-size: 12px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+  .badge { font-size: 10px; color: #38bdf8; border: 1px solid #38bdf8; border-radius: 4px; padding: 1px 5px; }
+  .ctx { font-size: 22px; font-weight: bold; }
+  .sub { font-size: 11px; color: #999; margin-top: 2px; }
+  .bar { height: 6px; background: #333; border-radius: 3px; overflow: hidden; margin: 8px 0; }
+  .fill { height: 100%; border-radius: 3px; transition: width 0.3s ease; }
+</style>
+</head>
+<body>
+  <div id="content"></div>
+  <script>
+    window.addEventListener('message', event => {
+      const data = event.data;
+      const { agySession, claudeTabs } = data;
+      const esc = value => String(value == null ? '?' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      let html = '';
+      html += '<div class="section-title">Codex</div>';
+      if (!data.codexSessions || !data.codexSessions.length) {
+        html += '<div class="card sub">훅 데이터 대기 · Codex에서 새 훅 신뢰 후 입력하세요.</div>';
+      }
+      (data.codexSessions || []).forEach(c => {
+        html += '<div class="card"><div class="title">' + esc(c.model) + ' / ' + esc(c.effort) + '</div>';
+        html += '<div class="ctx">' + esc(c.context) + '</div><div class="sub">마지막 입력 토큰 / 컨텍스트 한도 ' + esc(c.window) + '</div>';
+        html += '<div class="sub">' + esc(c.message || '대기') + '</div>';
+        if (c.recommendation) html += '<div class="sub">권장: ' + esc(c.recommendation.model) + ' / ' + esc(c.recommendation.effort) + '</div>';
+        html += '<div class="sub">세션 ' + esc(c.id) + ' · ' + esc(new Date(c.updated * 1000).toLocaleTimeString()) + '</div></div>';
+      });
+
+      if (agySession) {
+        html += '<div class="section-title">Google Antigravity</div>';
+        html += '<div class="card agy active">';
+        html += '  <div class="head">';
+        html += '    <span class="badge">ACTIVE</span>';
+        html += '    <div class="title">' + agySession.title + '</div>';
+        html += '    <span>' + agySession.emoji + '</span>';
+        html += '  </div>';
+        html += '  <div class="ctx" style="color:' + agySession.color + '">' + (agySession.tokens >= 1000 ? (agySession.tokens/1000).toFixed(1) + 'k' : agySession.tokens) + ' <span style="font-size:14px;color:#888;">/ 200k (' + agySession.percent + '%)</span></div>';
+        html += '  <div class="bar"><div class="fill" style="width:' + agySession.percent + '%;background:' + agySession.color + '"></div></div>';
+        html += '  <div class="sub">Model: ' + agySession.model + ' · ' + agySession.recommendation + '</div>';
+        html += '</div>';
+      }
+
+      if (claudeTabs && claudeTabs.length > 0) {
+        html += '<div class="section-title">Claude Code</div>';
+        claudeTabs.forEach(t => {
+          html += '<div class="card ' + (t.active ? 'active' : '') + '">';
+          html += '  <div class="head">';
+          if (t.active) html += '<span class="badge" style="color:#4ec9b0;border-color:#4ec9b0">CURRENT</span>';
+          html += '    <div class="title">' + t.label + '</div>';
+          html += '    <span>' + t.emoji + '</span>';
+          html += '  </div>';
+          html += '  <div class="ctx" style="color:' + t.color + '">' + (t.context >= 1000 ? (t.context/1000).toFixed(1) + 'k' : t.context) + ' <span style="font-size:14px;color:#888;">/ ' + (t.loop/1000).toFixed(0) + 'k (' + t.percent + '%)</span></div>';
+          html += '  <div class="bar"><div class="fill" style="width:' + Math.min(100, t.percent) + '%;background:' + t.color + '"></div></div>';
+          html += '  <div class="sub">Model: ' + (t.model || '-') + '</div>';
+          html += '</div>';
+        });
+      }
+
+      if (!agySession && (!claudeTabs || claudeTabs.length === 0)) {
+        html += '<div style="color:#888;text-align:center;margin-top:20px;">열린 세션 없음</div>';
+      }
+
+      document.getElementById('content').innerHTML = html;
+    });
+  </script>
+</body>
+</html>`;
+
+export function deactivate() {}

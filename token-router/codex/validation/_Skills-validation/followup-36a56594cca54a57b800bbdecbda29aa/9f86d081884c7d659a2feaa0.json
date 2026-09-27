@@ -1,0 +1,1 @@
+{"id": "test", "cwd": null, "model": "gpt-6-astra", "effort": null, "context": null, "window": null, "updated": 1790482570.7718973, "event": "UserPromptSubmit", "blocked": false, "effort_source": "unknown", "recommendation": {"tier": "complex", "model": "gpt-6-astra", "effort": "high", "advisory_only": true, "availability": "verify_in_current_session"}, "message": "라우팅 통과"}
