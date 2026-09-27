@@ -93,6 +93,34 @@ vscode-permission-manager/
 └── README.md
 ```
 
+## ⚠️ 현재 상태 (2026-09-27)
+
+### ✅ 완성된 부분
+- Permission Manager Sidebar UI 완전 구현
+- Hook 시스템 통합 (Claude Code permission 감지)
+- 실시간 권한 요청 표시
+- 다중 VSCode 창 지원
+- HTTP 서버 (127.0.0.1:47821) 정상 작동
+
+### 🐛 알려진 버그
+**Webview → Extension 통신 문제**
+- Sidebar의 버튼 클릭 시 Extension으로 메시지가 전달되지 않음
+- VSCode's `vscode.postMessage()` 채널 불안정
+- HTTP 우회 시도도 성공하지 못함
+- **영향**: 사이드바의 승인/거부 버튼이 작동하지 않음
+
+### 🔄 임시 방법
+현재는 Claude Code의 permission dialog에서 직접 "Yes/No"를 선택하면 작동합니다.
+
+### 📋 다음 작업
+1. **Webview ↔ Extension 통신 채널 재설계**
+   - VSCode Extension API의 webview message passing 메커니즘 재검토
+   - 다른 통신 방식 시도 (custom URI scheme, shared state, etc.)
+   
+2. **테스트 강화**
+   - Extension Host 콘솔 로깅 심화
+   - Webview 개발자 도구로 실시간 디버깅
+
 ## 🔧 개발 및 빌드
 
 ```bash
@@ -111,3 +139,12 @@ npm run package
 # 개발 모드 실행 (F5)
 # VSCode에서 F5 누르면 Extension Host 실행
 ```
+
+## 🐞 버그 리포트
+
+이 프로젝트의 버그를 발견하셨나요? 아래 항목들을 함께 제시해주세요:
+- VSCode 버전
+- Permission Manager 버전
+- 재현 방법
+- 예상 결과 vs 실제 결과
+- 콘솔 에러 메시지 (있으면)
