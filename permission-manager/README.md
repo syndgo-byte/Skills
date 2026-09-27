@@ -30,14 +30,28 @@ Extensions (Ctrl+Shift+X) → "Permission Manager" 검색 → Install
 
 ## 📸 사용 예제
 
-### Sidebar에서 권한 관리
-![Permission Manager Sidebar](screenshot_example.png)
+### 1️⃣ 사이드바 아이콘으로 열기
+- Activity Bar 좌측에서 **🔐 Lock 아이콘** 클릭
+- Permission Manager Sidebar가 열림
 
-- 🔐 **Lock 아이콘**: Activity Bar에서 클릭해서 열기
-- 📋 **권한 목록**: 현재 pending된 모든 permission 표시
-- ✅ **Approve All**: 모든 권한 한번에 승인
-- ❌ **Deny All**: 모든 권한 거절
-- ➜ **Apply Selected**: 선택한 권한만 적용
+### 2️⃣ 권한 요청 자동 수집
+Claude Code (또는 다른 도구)에서 permission이 필요한 작업 실행 시:
+```bash
+echo "test"  # 또는 다른 명령
+```
+↓
+Permission Manager 사이드바에 **실시간으로 요청 표시**
+
+### 3️⃣ 권한 승인/거부
+- **모두 허용** - 모든 pending 권한 한번에 승인
+- **모두 거부** - 모든 pending 권한 한번에 거절  
+- **선택 허용** - 체크박스로 선택한 것만 승인
+- **선택 거부** - 체크박스로 선택한 것만 거절
+
+### 4️⃣ 다중 VSCode 창 지원
+여러 VSCode 창에서 동시에 실행 시:
+- 모든 permission 요청이 **한 곳의 Permission Manager**로 수집
+- 어느 창에서든 일괄 승인/거부 가능
 
 ## 🛠 기술 스택
 
