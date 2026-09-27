@@ -89,20 +89,3 @@ npm run package
 # 개발 모드 실행 (F5)
 # VSCode에서 F5 누르면 Extension Host 실행
 ```
-
-## 🐛 Known Issues
-
-- 처음 설치 후 Sidebar 아이콘이 안 보일 수 있음 → VSCode reload (Ctrl+Shift+P → "Reload Window")
-- Permission이 settings.json에 저장될 때 workspace level만 지원 (user level은 미지원)
-
-## 📝 라이선스
-
-MIT
-
-## 👨‍💻 만든 사람
-
-Claude (Anthropic)
-
----
-
-**사용 중 문제가 발생하면 GitHub Issues에 보고해주세요!** 🙏
