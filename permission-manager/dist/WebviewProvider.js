@@ -95,15 +95,53 @@ const selected = new Set();
 const $ = (id) => document.getElementById(id);
 
 function decide(ids, decision) {
-  if (ids.length === 0) return;
+  console.log('🔴 decide() called with:', ids, decision);
+  if (ids.length === 0) {
+    console.log('⚠️ ids is empty, returning');
+    return;
+  }
   ids.forEach((id) => selected.delete(id));
+  console.log('📤 Sending postMessage:', { type: 'decide', ids, decision });
   vscode.postMessage({ type: 'decide', ids, decision });
 }
 
-$('allowAll').addEventListener('click', () => decide(requests.map((r) => r.id), 'allow'));
-$('denyAll').addEventListener('click', () => decide(requests.map((r) => r.id), 'deny'));
-$('allowSelected').addEventListener('click', () => decide([...selected], 'allow'));
-$('denySelected').addEventListener('click', () => decide([...selected], 'deny'));
+try {
+  const allowAll = $('allowAll');
+  console.log('✅ allowAll button found:', !!allowAll);
+  if (allowAll) {
+    allowAll.addEventListener('click', () => {
+      console.log('🖱️ allowAll clicked, requests:', requests.map(r => r.id));
+      decide(requests.map((r) => r.id), 'allow');
+    });
+  }
+
+  const denyAll = $('denyAll');
+  console.log('✅ denyAll button found:', !!denyAll);
+  if (denyAll) {
+    denyAll.addEventListener('click', () => {
+      console.log('🖱️ denyAll clicked, requests:', requests.map(r => r.id));
+      decide(requests.map((r) => r.id), 'deny');
+    });
+  }
+
+  const allowSelected = $('allowSelected');
+  if (allowSelected) {
+    allowSelected.addEventListener('click', () => {
+      console.log('🖱️ allowSelected clicked, selected:', [...selected]);
+      decide([...selected], 'allow');
+    });
+  }
+
+  const denySelected = $('denySelected');
+  if (denySelected) {
+    denySelected.addEventListener('click', () => {
+      console.log('🖱️ denySelected clicked, selected:', [...selected]);
+      decide([...selected], 'deny');
+    });
+  }
+} catch (err) {
+  console.error('❌ Error setting up buttons:', err);
+}
 
 function el(tag, className, text) {
   const node = document.createElement(tag);
