@@ -174,16 +174,15 @@ function currentTier(transcript, st) {
 // Sending the same prompt again within 10 minutes lets it through, on whatever model is now
 // selected (after /model the transcript still shows the old model until the next answer).
 //
-// Don't suggest down switches mid-session at any context size. Caches are per model, so switching
-// costs a full uncached re-read on the cheaper model, which costs more than the current model
-// reading from cache. Suggest handoff to a new session instead.
+// Routing is signal-based only. No context-size constraints: cache per model is a call-level
+// choice, not a routing constraint. Suggest both up and down if the signal is clear (margin >= 2).
 function switchDirection(cur, d, st) {
   const have = ROUTES.indexOf(cur);
   const need = ROUTES.indexOf(d.route);
   if (need > have && need >= ROUTES.indexOf(st.askAt || 'opus')) return 'up';
-  // Down switches are never suggested mid-session.
+  // Down for clear rule verdict at least one tier lower (opus -> sonnet, sonnet -> haiku).
   if (st.down === false || d.by !== 'rules' || /확신 낮음/.test(d.why) || have - need < 1) return null;
-  return null;
+  return 'down';
 }
 
 async function hook() {

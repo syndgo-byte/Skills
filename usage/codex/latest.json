@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-09-27T11:08:14.596Z",
+  "session": {
+    "id": "01a0e14f-becc-7a81-acb1-de3fac8c804f",
+    "cwd": "C:\\Users\\나\\Documents\\Codex\\2026-09-27\\referenced-chatgpt-conversation-this-is-an",
+    "model": "codex-auto-review",
+    "effort": "low",
+    "context_tokens": 22531,
+    "context_window": 258400,
+    "context_percent": 8.72,
+    "last_request": {
+      "input_tokens": 22531,
+      "cached_input_tokens": 21248,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 65,
+      "reasoning_output_tokens": 10,
+      "total_tokens": 22596
+    },
+    "total_usage": {
+      "input_tokens": 98603,
+      "cached_input_tokens": 78592,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 498,
+      "reasoning_output_tokens": 204,
+      "total_tokens": 99101
+    },
+    "rate_limits": {
+      "limit_id": "codex",
+      "limit_name": null,
+      "primary": {
+        "used_percent": 100,
+        "window_minutes": 300,
+        "resets_at": 1790498100
+      },
+      "secondary": {
+        "used_percent": 16,
+        "window_minutes": 10080,
+        "resets_at": 1791084900
+      },
+      "credits": {
+        "has_credits": false,
+        "unlimited": false,
+        "balance": "0"
+      },
+      "individual_limit": null,
+      "spend_control_reached": null,
+      "plan_type": "plus",
+      "rate_limit_reached_type": null
+    },
+    "usage_updated_at": "2026-09-27T05:22:51.595Z",
+    "source_file": "C:\\Users\\나\\.codex\\sessions\\2026\\09\\27\\rollout-2026-09-27T14-21-34-01a0e14f-becc-7a81-acb1-de3fac8c804f.jsonl",
+    "log_updated_at": "2026-09-27T05:21:34.998Z"
+  }
+}

@@ -1,0 +1,1008 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-09-27T11:08:14.596Z",
+  "collector_pid": 14832,
+  "status": "running",
+  "poll_interval_ms": 1000,
+  "context_metric": "last_request.input_tokens",
+  "sessions": [
+    {
+      "id": "01a0e14f-becc-7a81-acb1-de3fac8c804f",
+      "cwd": "C:\\Users\\나\\Documents\\Codex\\2026-09-27\\referenced-chatgpt-conversation-this-is-an",
+      "model": "codex-auto-review",
+      "effort": "low",
+      "context_tokens": 22531,
+      "context_window": 258400,
+      "context_percent": 8.72,
+      "last_request": {
+        "input_tokens": 22531,
+        "cached_input_tokens": 21248,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 65,
+        "reasoning_output_tokens": 10,
+        "total_tokens": 22596
+      },
+      "total_usage": {
+        "input_tokens": 98603,
+        "cached_input_tokens": 78592,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 498,
+        "reasoning_output_tokens": 204,
+        "total_tokens": 99101
+      },
+      "rate_limits": {
+        "limit_id": "codex",
+        "limit_name": null,
+        "primary": {
+          "used_percent": 100,
+          "window_minutes": 300,
+          "resets_at": 1790498100
+        },
+        "secondary": {
+          "used_percent": 16,
+          "window_minutes": 10080,
+          "resets_at": 1791084900
+        },
+        "credits": {
+          "has_credits": false,
+          "unlimited": false,
+          "balance": "0"
+        },
+        "individual_limit": null,
+        "spend_control_reached": null,
+        "plan_type": "plus",
+        "rate_limit_reached_type": null
+      },
+      "usage_updated_at": "2026-09-27T05:22:51.595Z",
+      "source_file": "C:\\Users\\나\\.codex\\sessions\\2026\\09\\27\\rollout-2026-09-27T14-21-34-01a0e14f-becc-7a81-acb1-de3fac8c804f.jsonl",
+      "log_updated_at": "2026-09-27T05:21:34.998Z"
+    },
+    {
+      "id": "01a0e14e-2e33-7232-ac81-61e14d07c10f",
+      "cwd": "C:\\Users\\나\\Documents\\Codex\\2026-09-27\\referenced-chatgpt-conversation-this-is-an",
+      "model": "gpt-6-astra",
+      "effort": null,
+      "context_tokens": 84045,
+      "context_window": 258400,
+      "context_percent": 32.53,
+      "last_request": {
+        "input_tokens": 84045,
+        "cached_input_tokens": 80640,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 358,
+        "reasoning_output_tokens": 224,
+        "total_tokens": 84403
+      },
+      "total_usage": {
+        "input_tokens": 775977,
+        "cached_input_tokens": 711424,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 3055,
+        "reasoning_output_tokens": 498,
+        "total_tokens": 779032
+      },
+      "rate_limits": {
+        "limit_id": "premium",
+        "limit_name": null,
+        "primary": null,
+        "secondary": null,
+        "credits": {
+          "has_credits": false,
+          "unlimited": false,
+          "balance": "0"
+        },
+        "individual_limit": null,
+        "spend_control_reached": null,
+        "plan_type": "plus",
+        "rate_limit_reached_type": null
+      },
+      "usage_updated_at": "2026-09-27T05:23:18.173Z",
+      "source_file": "C:\\Users\\나\\.codex\\sessions\\2026\\09\\27\\rollout-2026-09-27T14-19-52-01a0e14e-2e33-7232-ac81-61e14d07c10f.jsonl",
+      "log_updated_at": "2026-09-27T05:19:53.444Z"
+    },
+    {
+      "id": "01a0e0ed-fd5c-74c0-bbfd-f672de569c40",
+      "cwd": "D:\\",
+      "model": "gpt-6-astra",
+      "effort": "low",
+      "context_tokens": 142646,
+      "context_window": 258400,
+      "context_percent": 55.2,
+      "last_request": {
+        "input_tokens": 142646,
+        "cached_input_tokens": 141440,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 107,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 142753
+      },
+      "total_usage": {
+        "input_tokens": 8407169,
+        "cached_input_tokens": 8262016,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 37826,
+        "reasoning_output_tokens": 1524,
+        "total_tokens": 8444995
+      },
+      "rate_limits": {
+        "limit_id": "codex",
+        "limit_name": null,
+        "primary": {
+          "used_percent": 89,
+          "window_minutes": 300,
+          "resets_at": 1790498100
+        },
+        "secondary": {
+          "used_percent": 14,
+          "window_minutes": 10080,
+          "resets_at": 1791084900
+        },
+        "credits": {
+          "has_credits": false,
+          "unlimited": false,
+          "balance": "0"
+        },
+        "individual_limit": null,
+        "spend_control_reached": null,
+        "plan_type": "plus",
+        "rate_limit_reached_type": null
+      },
+      "usage_updated_at": "2026-09-27T05:15:12.508Z",
+      "source_file": "C:\\Users\\나\\.codex\\sessions\\2026\\09\\27\\rollout-2026-09-27T12-34-48-01a0e0ed-fd5c-74c0-bbfd-f672de569c40.jsonl",
+      "log_updated_at": "2026-09-27T05:15:12.541Z"
+    },
+    {
+      "id": "01a0e147-079d-7df2-b116-9ae9d0e8200d",
+      "cwd": "D:\\",
+      "model": "codex-auto-review",
+      "effort": "low",
+      "context_tokens": 24323,
+      "context_window": 258400,
+      "context_percent": 9.41,
+      "last_request": {
+        "input_tokens": 24323,
+        "cached_input_tokens": 22272,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 197,
+        "reasoning_output_tokens": 131,
+        "total_tokens": 24520
+      },
+      "total_usage": {
+        "input_tokens": 87414,
+        "cached_input_tokens": 65536,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 577,
+        "reasoning_output_tokens": 320,
+        "total_tokens": 87991
+      },
+      "rate_limits": {
+        "limit_id": "codex",
+        "limit_name": null,
+        "primary": {
+          "used_percent": 89,
+          "window_minutes": 300,
+          "resets_at": 1790498100
+        },
+        "secondary": {
+          "used_percent": 14,
+          "window_minutes": 10080,
+          "resets_at": 1791084900
+        },
+        "credits": {
+          "has_credits": false,
+          "unlimited": false,
+          "balance": "0"
+        },
+        "individual_limit": null,
+        "spend_control_reached": null,
+        "plan_type": "plus",
+        "rate_limit_reached_type": null
+      },
+      "usage_updated_at": "2026-09-27T05:15:04.947Z",
+      "source_file": "C:\\Users\\나\\.codex\\sessions\\2026\\09\\27\\rollout-2026-09-27T14-12-03-01a0e147-079d-7df2-b116-9ae9d0e8200d.jsonl",
+      "log_updated_at": "2026-09-27T05:13:36.425Z"
+    },
+    {
+      "id": "01a0e12c-01e7-7610-8ae6-c61dafc49238",
+      "cwd": "D:\\",
+      "model": "codex-auto-review",
+      "effort": "low",
+      "context_tokens": 35014,
+      "context_window": 258400,
+      "context_percent": 13.55,
+      "last_request": {
+        "input_tokens": 35014,
+        "cached_input_tokens": 34560,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 288,
+        "reasoning_output_tokens": 216,
+        "total_tokens": 35302
+      },
+      "total_usage": {
+        "input_tokens": 317367,
+        "cached_input_tokens": 281856,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 1714,
+        "reasoning_output_tokens": 689,
+        "total_tokens": 319081
+      },
+      "rate_limits": {
+        "limit_id": "codex",
+        "limit_name": null,
+        "primary": {
+          "used_percent": 76,
+          "window_minutes": 300,
+          "resets_at": 1790498100
+        },
+        "secondary": {
+          "used_percent": 12,
+          "window_minutes": 10080,
+          "resets_at": 1791084900
+        },
+        "credits": {
+          "has_credits": false,
+          "unlimited": false,
+          "balance": "0"
+        },
+        "individual_limit": null,
+        "spend_control_reached": null,
+        "plan_type": "plus",
+        "rate_limit_reached_type": null
+      },
+      "usage_updated_at": "2026-09-27T04:52:52.859Z",
+      "source_file": "C:\\Users\\나\\.codex\\sessions\\2026\\09\\27\\rollout-2026-09-27T13-42-32-01a0e12c-01e7-7610-8ae6-c61dafc49238.jsonl",
+      "log_updated_at": "2026-09-27T04:45:04.802Z"
+    },
+    {
+      "id": "01a0e10a-2154-7d73-a21b-9a1ac1eff040",
+      "cwd": "D:\\",
+      "model": "codex-auto-review",
+      "effort": "low",
+      "context_tokens": 45580,
+      "context_window": 258400,
+      "context_percent": 17.64,
+      "last_request": {
+        "input_tokens": 45580,
+        "cached_input_tokens": 43776,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 79,
+        "reasoning_output_tokens": 7,
+        "total_tokens": 45659
+      },
+      "total_usage": {
+        "input_tokens": 318472,
+        "cached_input_tokens": 273152,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 1167,
+        "reasoning_output_tokens": 501,
+        "total_tokens": 319639
+      },
+      "rate_limits": {
+        "limit_id": "codex",
+        "limit_name": null,
+        "primary": {
+          "used_percent": 47,
+          "window_minutes": 300,
+          "resets_at": 1790498100
+        },
+        "secondary": {
+          "used_percent": 7,
+          "window_minutes": 10080,
+          "resets_at": 1791084900
+        },
+        "credits": {
+          "has_credits": false,
+          "unlimited": false,
+          "balance": "0"
+        },
+        "individual_limit": null,
+        "spend_control_reached": null,
+        "plan_type": "plus",
+        "rate_limit_reached_type": null
+      },
+      "usage_updated_at": "2026-09-27T04:16:08.617Z",
+      "source_file": "C:\\Users\\나\\.codex\\sessions\\2026\\09\\27\\rollout-2026-09-27T13-05-32-01a0e10a-2154-7d73-a21b-9a1ac1eff040.jsonl",
+      "log_updated_at": "2026-09-27T04:05:32.755Z"
+    },
+    {
+      "id": "01a0beea-a58f-7340-82ff-229295c813d0",
+      "cwd": "C:\\Users\\나\\.gemini\\antigravity\\brain\\ec00a75b-eb61-4bfe-9d9b-2f3fc0f699e4\\Final",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "context_tokens": 160333,
+      "context_window": 258400,
+      "context_percent": 62.05,
+      "last_request": {
+        "input_tokens": 160333,
+        "cached_input_tokens": 151040,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 1206,
+        "reasoning_output_tokens": 516,
+        "total_tokens": 161539
+      },
+      "total_usage": {
+        "input_tokens": 6102369,
+        "cached_input_tokens": 5927680,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 31766,
+        "reasoning_output_tokens": 7419,
+        "total_tokens": 6134135
+      },
+      "rate_limits": {
+        "limit_id": "premium",
+        "limit_name": null,
+        "primary": null,
+        "secondary": null,
+        "credits": {
+          "has_credits": false,
+          "unlimited": false,
+          "balance": null
+        },
+        "individual_limit": null,
+        "spend_control_reached": null,
+        "plan_type": "free",
+        "rate_limit_reached_type": null
+      },
+      "usage_updated_at": "2026-09-20T13:58:33.661Z",
+      "source_file": "C:\\Users\\나\\.codex\\sessions\\2026\\09\\20\\rollout-2026-09-20T22-04-03-01a0beea-a58f-7340-82ff-229295c813d0.jsonl",
+      "log_updated_at": "2026-09-26T11:10:48.171Z"
+    },
+    {
+      "id": "01a0cdd3-52e1-7d82-847b-91f45f74ed35",
+      "cwd": "C:\\Users\\나\\Documents\\Codex\\2026-09-23\\webgpt-p",
+      "model": "gpt-6-astra",
+      "effort": "low",
+      "context_tokens": 41322,
+      "context_window": 258400,
+      "context_percent": 15.99,
+      "last_request": {
+        "input_tokens": 41322,
+        "cached_input_tokens": 34944,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 92,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 41414
+      },
+      "total_usage": {
+        "input_tokens": 221838,
+        "cached_input_tokens": 199936,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 476,
+        "reasoning_output_tokens": 26,
+        "total_tokens": 222314
+      },
+      "rate_limits": {
+        "limit_id": "codex",
+        "limit_name": null,
+        "primary": {
+          "used_percent": 3,
+          "window_minutes": 300,
+          "resets_at": 1790177592
+        },
+        "secondary": {
+          "used_percent": 98,
+          "window_minutes": 10080,
+          "resets_at": 1790580965
+        },
+        "credits": {
+          "has_credits": false,
+          "unlimited": false,
+          "balance": "0"
+        },
+        "individual_limit": null,
+        "spend_control_reached": null,
+        "plan_type": "plus",
+        "rate_limit_reached_type": null
+      },
+      "usage_updated_at": "2026-09-23T10:34:43.017Z",
+      "source_file": "C:\\Users\\나\\.codex\\sessions\\2026\\09\\23\\rollout-2026-09-23T19-32-53-01a0cdd3-52e1-7d82-847b-91f45f74ed35.jsonl",
+      "log_updated_at": "2026-09-24T06:53:22.185Z"
+    },
+    {
+      "id": "01a0cb39-3d4c-7970-8529-6471238cf737",
+      "cwd": "C:\\Users\\나\\.gemini\\antigravity\\brain\\ec00a75b-eb61-4bfe-9d9b-2f3fc0f699e4\\Final",
+      "model": "gpt-6-astra",
+      "effort": "low",
+      "context_tokens": null,
+      "context_window": null,
+      "context_percent": null,
+      "last_request": null,
+      "total_usage": null,
+      "rate_limits": {
+        "limit_id": "premium",
+        "limit_name": null,
+        "primary": null,
+        "secondary": null,
+        "credits": {
+          "has_credits": false,
+          "unlimited": false,
+          "balance": "0"
+        },
+        "individual_limit": null,
+        "spend_control_reached": null,
+        "plan_type": null,
+        "rate_limit_reached_type": null
+      },
+      "usage_updated_at": null,
+      "source_file": "C:\\Users\\나\\.codex\\sessions\\2026\\09\\23\\rollout-2026-09-23T07-25-21-01a0cb39-3d4c-7970-8529-6471238cf737.jsonl",
+      "log_updated_at": "2026-09-23T15:10:58.914Z"
+    },
+    {
+      "id": "01a0cdd5-b7f0-7ed3-b0e5-f7a83e7ee52a",
+      "cwd": "C:\\Users\\나\\Documents\\Codex\\2026-09-23\\new-chat",
+      "model": "gpt-6-astra",
+      "effort": "low",
+      "context_tokens": 79121,
+      "context_window": 258400,
+      "context_percent": 30.62,
+      "last_request": {
+        "input_tokens": 79121,
+        "cached_input_tokens": 78720,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 491,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 79612
+      },
+      "total_usage": {
+        "input_tokens": 1020654,
+        "cached_input_tokens": 912768,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 3760,
+        "reasoning_output_tokens": 53,
+        "total_tokens": 1024414
+      },
+      "rate_limits": {
+        "limit_id": "codex",
+        "limit_name": null,
+        "primary": {
+          "used_percent": 14,
+          "window_minutes": 300,
+          "resets_at": 1790177592
+        },
+        "secondary": {
+          "used_percent": 100,
+          "window_minutes": 10080,
+          "resets_at": 1790580965
+        },
+        "credits": {
+          "has_credits": false,
+          "unlimited": false,
+          "balance": "0"
+        },
+        "individual_limit": null,
+        "spend_control_reached": null,
+        "plan_type": "plus",
+        "rate_limit_reached_type": null
+      },
+      "usage_updated_at": "2026-09-23T14:32:53.093Z",
+      "source_file": "C:\\Users\\나\\.codex\\sessions\\2026\\09\\23\\rollout-2026-09-23T19-35-30-01a0cdd5-b7f0-7ed3-b0e5-f7a83e7ee52a.jsonl",
+      "log_updated_at": "2026-09-23T10:35:35.581Z"
+    },
+    {
+      "id": "01a0cbfc-e174-7ad3-9ae9-f3db31ba09b9",
+      "cwd": "C:\\Users\\나\\Documents\\Codex\\2026-09-23\\follow-the-included-references-setup-md",
+      "model": "codex-auto-review",
+      "effort": "low",
+      "context_tokens": 55959,
+      "context_window": 258400,
+      "context_percent": 21.66,
+      "last_request": {
+        "input_tokens": 55959,
+        "cached_input_tokens": 54016,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 86,
+        "reasoning_output_tokens": 25,
+        "total_tokens": 56045
+      },
+      "total_usage": {
+        "input_tokens": 616157,
+        "cached_input_tokens": 540672,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 2571,
+        "reasoning_output_tokens": 1485,
+        "total_tokens": 618728
+      },
+      "rate_limits": {
+        "limit_id": "codex",
+        "limit_name": null,
+        "primary": {
+          "used_percent": 28,
+          "window_minutes": 300,
+          "resets_at": 1790140196
+        },
+        "secondary": {
+          "used_percent": 98,
+          "window_minutes": 10080,
+          "resets_at": 1790580965
+        },
+        "credits": {
+          "has_credits": false,
+          "unlimited": false,
+          "balance": "0"
+        },
+        "individual_limit": null,
+        "spend_control_reached": null,
+        "plan_type": "plus",
+        "rate_limit_reached_type": null
+      },
+      "usage_updated_at": "2026-09-23T02:07:39.205Z",
+      "source_file": "C:\\Users\\나\\.codex\\sessions\\2026\\09\\23\\rollout-2026-09-23T10-59-02-01a0cbfc-e174-7ad3-9ae9-f3db31ba09b9.jsonl",
+      "log_updated_at": "2026-09-23T01:59:02.964Z"
+    },
+    {
+      "id": "01a0cbf7-d6b0-74e0-a1b8-6936f6b66412",
+      "cwd": "C:\\Users\\나\\Documents\\Codex\\2026-09-23\\follow-the-included-references-setup-md",
+      "model": "gpt-6-astra",
+      "effort": "low",
+      "context_tokens": 84663,
+      "context_window": 258400,
+      "context_percent": 32.76,
+      "last_request": {
+        "input_tokens": 84663,
+        "cached_input_tokens": 84480,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 74,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 84737
+      },
+      "total_usage": {
+        "input_tokens": 2338102,
+        "cached_input_tokens": 2264064,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 6291,
+        "reasoning_output_tokens": 394,
+        "total_tokens": 2344393
+      },
+      "rate_limits": {
+        "limit_id": "codex",
+        "limit_name": null,
+        "primary": {
+          "used_percent": 28,
+          "window_minutes": 300,
+          "resets_at": 1790140196
+        },
+        "secondary": {
+          "used_percent": 98,
+          "window_minutes": 10080,
+          "resets_at": 1790580965
+        },
+        "credits": {
+          "has_credits": false,
+          "unlimited": false,
+          "balance": "0"
+        },
+        "individual_limit": null,
+        "spend_control_reached": null,
+        "plan_type": "plus",
+        "rate_limit_reached_type": null
+      },
+      "usage_updated_at": "2026-09-23T02:07:45.312Z",
+      "source_file": "C:\\Users\\나\\.codex\\sessions\\2026\\09\\23\\rollout-2026-09-23T10-53-32-01a0cbf7-d6b0-74e0-a1b8-6936f6b66412.jsonl",
+      "log_updated_at": "2026-09-23T01:53:43.769Z"
+    },
+    {
+      "id": "01a0c600-b060-7843-9557-6c45aea49c37",
+      "cwd": "C:\\Users\\나\\.gemini\\antigravity\\brain\\ec00a75b-eb61-4bfe-9d9b-2f3fc0f699e4\\Final",
+      "model": "gpt-6-astra",
+      "effort": "low",
+      "context_tokens": 150057,
+      "context_window": 258400,
+      "context_percent": 58.07,
+      "last_request": {
+        "input_tokens": 150057,
+        "cached_input_tokens": 149120,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 323,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 150380
+      },
+      "total_usage": {
+        "input_tokens": 32112762,
+        "cached_input_tokens": 31314816,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 131572,
+        "reasoning_output_tokens": 26803,
+        "total_tokens": 32244334
+      },
+      "rate_limits": {
+        "limit_id": "codex",
+        "limit_name": null,
+        "primary": {
+          "used_percent": 100,
+          "window_minutes": 300,
+          "resets_at": 1790120948
+        },
+        "secondary": {
+          "used_percent": 93,
+          "window_minutes": 10080,
+          "resets_at": 1790580965
+        },
+        "credits": {
+          "has_credits": false,
+          "unlimited": false,
+          "balance": "0"
+        },
+        "individual_limit": null,
+        "spend_control_reached": null,
+        "plan_type": "plus",
+        "rate_limit_reached_type": null
+      },
+      "usage_updated_at": "2026-09-22T19:29:54.172Z",
+      "source_file": "C:\\Users\\나\\.codex\\sessions\\2026\\09\\22\\rollout-2026-09-22T07-05-29-01a0c600-b060-7843-9557-6c45aea49c37.jsonl",
+      "log_updated_at": "2026-09-22T19:29:54.623Z"
+    },
+    {
+      "id": "01a0ca91-70f1-7c52-8dc1-c1fb7020b454",
+      "cwd": "C:\\Users\\나\\.gemini\\antigravity\\brain\\ec00a75b-eb61-4bfe-9d9b-2f3fc0f699e4\\Final",
+      "model": "codex-auto-review",
+      "effort": "low",
+      "context_tokens": 41196,
+      "context_window": 258400,
+      "context_percent": 15.94,
+      "last_request": {
+        "input_tokens": 41196,
+        "cached_input_tokens": 38656,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 66,
+        "reasoning_output_tokens": 14,
+        "total_tokens": 41262
+      },
+      "total_usage": {
+        "input_tokens": 215717,
+        "cached_input_tokens": 175616,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 1062,
+        "reasoning_output_tokens": 688,
+        "total_tokens": 216779
+      },
+      "rate_limits": {
+        "limit_id": "codex",
+        "limit_name": null,
+        "primary": {
+          "used_percent": 100,
+          "window_minutes": 300,
+          "resets_at": 1790120948
+        },
+        "secondary": {
+          "used_percent": 93,
+          "window_minutes": 10080,
+          "resets_at": 1790580965
+        },
+        "credits": {
+          "has_credits": false,
+          "unlimited": false,
+          "balance": "0"
+        },
+        "individual_limit": null,
+        "spend_control_reached": null,
+        "plan_type": "plus",
+        "rate_limit_reached_type": null
+      },
+      "usage_updated_at": "2026-09-22T19:29:33.640Z",
+      "source_file": "C:\\Users\\나\\.codex\\sessions\\2026\\09\\23\\rollout-2026-09-23T04-22-04-01a0ca91-70f1-7c52-8dc1-c1fb7020b454.jsonl",
+      "log_updated_at": "2026-09-22T19:22:05.179Z"
+    },
+    {
+      "id": "01a0c8b9-b720-7ef1-b031-61cd6df1b59f",
+      "cwd": "C:\\Users\\나\\.gemini\\antigravity\\brain\\ec00a75b-eb61-4bfe-9d9b-2f3fc0f699e4\\Final",
+      "model": "codex-auto-review",
+      "effort": "low",
+      "context_tokens": 80311,
+      "context_window": 258400,
+      "context_percent": 31.08,
+      "last_request": {
+        "input_tokens": 80311,
+        "cached_input_tokens": 78592,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 94,
+        "reasoning_output_tokens": 21,
+        "total_tokens": 80405
+      },
+      "total_usage": {
+        "input_tokens": 662906,
+        "cached_input_tokens": 506624,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 1533,
+        "reasoning_output_tokens": 624,
+        "total_tokens": 664439
+      },
+      "rate_limits": {
+        "limit_id": "codex",
+        "limit_name": null,
+        "primary": {
+          "used_percent": 2,
+          "window_minutes": 300,
+          "resets_at": 1790120948
+        },
+        "secondary": {
+          "used_percent": 78,
+          "window_minutes": 10080,
+          "resets_at": 1790580965
+        },
+        "credits": {
+          "has_credits": false,
+          "unlimited": false,
+          "balance": "0"
+        },
+        "individual_limit": null,
+        "spend_control_reached": null,
+        "plan_type": "plus",
+        "rate_limit_reached_type": null
+      },
+      "usage_updated_at": "2026-09-22T18:49:38.150Z",
+      "source_file": "C:\\Users\\나\\.codex\\sessions\\2026\\09\\22\\rollout-2026-09-22T19-46-49-01a0c8b9-b720-7ef1-b031-61cd6df1b59f.jsonl",
+      "log_updated_at": "2026-09-22T10:46:49.833Z"
+    },
+    {
+      "id": "01a0c8b4-3cec-7c60-b323-22f0ae2f28d5",
+      "cwd": "C:\\Users\\나\\.gemini\\antigravity\\brain\\ec00a75b-eb61-4bfe-9d9b-2f3fc0f699e4\\Final",
+      "model": null,
+      "effort": null,
+      "context_tokens": null,
+      "context_window": null,
+      "context_percent": null,
+      "last_request": null,
+      "total_usage": null,
+      "rate_limits": null,
+      "usage_updated_at": null,
+      "source_file": "C:\\Users\\나\\.codex\\sessions\\2026\\09\\22\\rollout-2026-09-22T19-40-50-01a0c8b4-3cec-7c60-b323-22f0ae2f28d5.jsonl",
+      "log_updated_at": "2026-09-22T10:40:50.529Z"
+    },
+    {
+      "id": "01a0c2e4-c228-7fb0-850e-1a68a7899cea",
+      "cwd": "C:\\Users\\나\\.gemini\\antigravity\\brain\\ec00a75b-eb61-4bfe-9d9b-2f3fc0f699e4\\Final",
+      "model": "gpt-6-astra",
+      "effort": "low",
+      "context_tokens": 76349,
+      "context_window": 258400,
+      "context_percent": 29.55,
+      "last_request": {
+        "input_tokens": 76349,
+        "cached_input_tokens": 75776,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 218,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 76567
+      },
+      "total_usage": {
+        "input_tokens": 16998073,
+        "cached_input_tokens": 16405888,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 68955,
+        "reasoning_output_tokens": 10452,
+        "total_tokens": 17067028
+      },
+      "rate_limits": {
+        "limit_id": "codex",
+        "limit_name": null,
+        "primary": {
+          "used_percent": 26,
+          "window_minutes": 300,
+          "resets_at": 1790087632
+        },
+        "secondary": {
+          "used_percent": 66,
+          "window_minutes": 10080,
+          "resets_at": 1790580965
+        },
+        "credits": {
+          "has_credits": false,
+          "unlimited": false,
+          "balance": "0"
+        },
+        "individual_limit": null,
+        "spend_control_reached": null,
+        "plan_type": "plus",
+        "rate_limit_reached_type": null
+      },
+      "usage_updated_at": "2026-09-22T09:49:46.169Z",
+      "source_file": "C:\\Users\\나\\.codex\\sessions\\2026\\09\\21\\rollout-2026-09-21T16-36-06-01a0c2e4-c228-7fb0-850e-1a68a7899cea.jsonl",
+      "log_updated_at": "2026-09-22T09:49:46.553Z"
+    },
+    {
+      "id": "01a0c884-fef0-7ff3-af63-64f2cc041f5c",
+      "cwd": "C:\\Users\\나\\.gemini\\antigravity\\brain\\ec00a75b-eb61-4bfe-9d9b-2f3fc0f699e4\\Final",
+      "model": "codex-auto-review",
+      "effort": "low",
+      "context_tokens": 25591,
+      "context_window": 258400,
+      "context_percent": 9.9,
+      "last_request": {
+        "input_tokens": 25591,
+        "cached_input_tokens": 4864,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 208,
+        "reasoning_output_tokens": 127,
+        "total_tokens": 25799
+      },
+      "total_usage": {
+        "input_tokens": 25591,
+        "cached_input_tokens": 4864,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 208,
+        "reasoning_output_tokens": 127,
+        "total_tokens": 25799
+      },
+      "rate_limits": {
+        "limit_id": "codex",
+        "limit_name": null,
+        "primary": {
+          "used_percent": 26,
+          "window_minutes": 300,
+          "resets_at": 1790087632
+        },
+        "secondary": {
+          "used_percent": 66,
+          "window_minutes": 10080,
+          "resets_at": 1790580965
+        },
+        "credits": {
+          "has_credits": false,
+          "unlimited": false,
+          "balance": "0"
+        },
+        "individual_limit": null,
+        "spend_control_reached": null,
+        "plan_type": "plus",
+        "rate_limit_reached_type": null
+      },
+      "usage_updated_at": "2026-09-22T09:49:26.353Z",
+      "source_file": "C:\\Users\\나\\.codex\\sessions\\2026\\09\\22\\rollout-2026-09-22T18-49-14-01a0c884-fef0-7ff3-af63-64f2cc041f5c.jsonl",
+      "log_updated_at": "2026-09-22T09:49:14.508Z"
+    },
+    {
+      "id": "01a0c761-4f02-7f22-a3f8-0625ccbc87ea",
+      "cwd": "C:\\Users\\나\\.gemini\\antigravity\\brain\\ec00a75b-eb61-4bfe-9d9b-2f3fc0f699e4\\Final",
+      "model": "codex-auto-review",
+      "effort": "low",
+      "context_tokens": 33688,
+      "context_window": 258400,
+      "context_percent": 13.04,
+      "last_request": {
+        "input_tokens": 33688,
+        "cached_input_tokens": 23296,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 105,
+        "reasoning_output_tokens": 39,
+        "total_tokens": 33793
+      },
+      "total_usage": {
+        "input_tokens": 57715,
+        "cached_input_tokens": 28160,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 304,
+        "reasoning_output_tokens": 170,
+        "total_tokens": 58019
+      },
+      "rate_limits": {
+        "limit_id": "codex",
+        "limit_name": null,
+        "primary": {
+          "used_percent": 93,
+          "window_minutes": 300,
+          "resets_at": 1790065752
+        },
+        "secondary": {
+          "used_percent": 62,
+          "window_minutes": 10080,
+          "resets_at": 1790580965
+        },
+        "credits": {
+          "has_credits": false,
+          "unlimited": false,
+          "balance": "0"
+        },
+        "individual_limit": null,
+        "spend_control_reached": null,
+        "plan_type": "plus",
+        "rate_limit_reached_type": null
+      },
+      "usage_updated_at": "2026-09-22T04:39:16.699Z",
+      "source_file": "C:\\Users\\나\\.codex\\sessions\\2026\\09\\22\\rollout-2026-09-22T13-30-38-01a0c761-4f02-7f22-a3f8-0625ccbc87ea.jsonl",
+      "log_updated_at": "2026-09-22T04:30:38.435Z"
+    },
+    {
+      "id": "01a0c63e-b27d-7080-9710-589a2be26854",
+      "cwd": "C:\\Users\\나\\.gemini\\antigravity\\brain\\ec00a75b-eb61-4bfe-9d9b-2f3fc0f699e4\\Final",
+      "model": "codex-auto-review",
+      "effort": "low",
+      "context_tokens": 90054,
+      "context_window": 258400,
+      "context_percent": 34.85,
+      "last_request": {
+        "input_tokens": 90054,
+        "cached_input_tokens": 88832,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 73,
+        "reasoning_output_tokens": 16,
+        "total_tokens": 90127
+      },
+      "total_usage": {
+        "input_tokens": 1294442,
+        "cached_input_tokens": 1163776,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 2847,
+        "reasoning_output_tokens": 1191,
+        "total_tokens": 1297289
+      },
+      "rate_limits": {
+        "limit_id": "codex",
+        "limit_name": null,
+        "primary": {
+          "used_percent": 67,
+          "window_minutes": 300,
+          "resets_at": 1790065752
+        },
+        "secondary": {
+          "used_percent": 58,
+          "window_minutes": 10080,
+          "resets_at": 1790580965
+        },
+        "credits": {
+          "has_credits": false,
+          "unlimited": false,
+          "balance": "0"
+        },
+        "individual_limit": null,
+        "spend_control_reached": null,
+        "plan_type": "plus",
+        "rate_limit_reached_type": null
+      },
+      "usage_updated_at": "2026-09-22T04:19:00.679Z",
+      "source_file": "C:\\Users\\나\\.codex\\sessions\\2026\\09\\22\\rollout-2026-09-22T08-13-12-01a0c63e-b27d-7080-9710-589a2be26854.jsonl",
+      "log_updated_at": "2026-09-21T23:13:12.920Z"
+    },
+    {
+      "id": "01a0c416-92ae-7922-8dd0-060ea1b74af7",
+      "cwd": "C:\\Users\\나\\.gemini\\antigravity\\brain\\ec00a75b-eb61-4bfe-9d9b-2f3fc0f699e4\\Final",
+      "model": "codex-auto-review",
+      "effort": "low",
+      "context_tokens": 35465,
+      "context_window": 258400,
+      "context_percent": 13.72,
+      "last_request": {
+        "input_tokens": 35465,
+        "cached_input_tokens": 31488,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 118,
+        "reasoning_output_tokens": 55,
+        "total_tokens": 35583
+      },
+      "total_usage": {
+        "input_tokens": 147111,
+        "cached_input_tokens": 114432,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 655,
+        "reasoning_output_tokens": 323,
+        "total_tokens": 147766
+      },
+      "rate_limits": {
+        "limit_id": "codex",
+        "limit_name": null,
+        "primary": {
+          "used_percent": 93,
+          "window_minutes": 300,
+          "resets_at": 1790012685
+        },
+        "secondary": {
+          "used_percent": 30,
+          "window_minutes": 10080,
+          "resets_at": 1790580965
+        },
+        "credits": {
+          "has_credits": false,
+          "unlimited": false,
+          "balance": "0"
+        },
+        "individual_limit": null,
+        "spend_control_reached": null,
+        "plan_type": "plus",
+        "rate_limit_reached_type": null
+      },
+      "usage_updated_at": "2026-09-21T13:23:51.224Z",
+      "source_file": "C:\\Users\\나\\.codex\\sessions\\2026\\09\\21\\rollout-2026-09-21T22-10-08-01a0c416-92ae-7922-8dd0-060ea1b74af7.jsonl",
+      "log_updated_at": "2026-09-21T13:10:08.930Z"
+    }
+  ],
+  "errors": []
+}
