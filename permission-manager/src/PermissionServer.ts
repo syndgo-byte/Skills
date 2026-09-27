@@ -1,7 +1,11 @@
 import * as http from 'http';
 import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
 
 export const PORT = 47821;
+const PORT_FILE = path.join(os.homedir(), '.claude-permission-manager.port');
 const MAX_BODY = 1024 * 1024;
 
 export type Decision = 'allow' | 'deny';
@@ -33,10 +37,14 @@ export class PermissionServer implements vscode.Disposable {
   start(): Promise<boolean> {
     return new Promise((resolve) => {
       const server = http.createServer((req, res) => this.handle(req, res));
-      server.once('error', () => resolve(false));
+      server.once('error', () => {
+        fs.writeFileSync(PORT_FILE, String(PORT), 'utf8');
+        resolve(false);
+      });
       server.listen(PORT, '127.0.0.1', () => {
         this.server = server;
         this.listening = true;
+        fs.writeFileSync(PORT_FILE, String(PORT), 'utf8');
         resolve(true);
       });
     });

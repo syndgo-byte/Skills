@@ -36,7 +36,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PermissionServer = exports.PORT = void 0;
 const http = __importStar(require("http"));
 const vscode = __importStar(require("vscode"));
+const fs = __importStar(require("fs"));
+const path = __importStar(require("path"));
+const os = __importStar(require("os"));
 exports.PORT = 47821;
+const PORT_FILE = path.join(os.homedir(), '.claude-permission-manager.port');
 const MAX_BODY = 1024 * 1024;
 function summarize(toolName, input) {
     if (!input || typeof input !== 'object')
@@ -58,10 +62,14 @@ class PermissionServer {
     start() {
         return new Promise((resolve) => {
             const server = http.createServer((req, res) => this.handle(req, res));
-            server.once('error', () => resolve(false));
+            server.once('error', () => {
+                fs.writeFileSync(PORT_FILE, String(exports.PORT), 'utf8');
+                resolve(false);
+            });
             server.listen(exports.PORT, '127.0.0.1', () => {
                 this.server = server;
                 this.listening = true;
+                fs.writeFileSync(PORT_FILE, String(exports.PORT), 'utf8');
                 resolve(true);
             });
         });
