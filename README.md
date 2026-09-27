@@ -28,14 +28,6 @@ Skills/
 
 **Claude Code · Antigravity · Codex** 에서 context가 커질 때 자동으로 정리해서 다음 세션으로 넘기는 토큰 관리 시스템
 
-| 플랫폼 | 상태 |
-|---|---|
-| Claude Code | ✅ 완성 (200k 자동 감시 · 모델 라우팅 · VSCode 상태표시줄) |
-| Antigravity | ⚠️ 미완성 (코드 준비됨, 훅 미등록) |
-| Codex | ⚠️ 미완성 (코드 준비됨, 수집기 미실행) |
-
-→ [token-router/README.md](token-router/README.md) 설치 및 사용법
-
 ### Claude_Skills
 
 Claude Code 플러그인 & 성능 도구
