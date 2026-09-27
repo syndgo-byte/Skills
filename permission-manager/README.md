@@ -101,7 +101,7 @@ vscode-permission-manager/
 
 ### 🐛 알려진 버그
 **Webview → Extension 통신 문제**
-- Sidebar의 버튼 클릭 시 Extension으로 메시지가 전달되지 않음
+- 클로드 코드 내에 "yes 혹은 No" 메시지 클릭시 extension 에서 메세지가 지워지지 않음
 - VSCode's `vscode.postMessage()` 채널 불안정
 - HTTP 우회 시도도 성공하지 못함
 - **영향**: 사이드바의 승인/거부 버튼이 작동하지 않음
