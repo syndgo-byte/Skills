@@ -1,0 +1,126 @@
+commit e41266b9ba53a12dd26ee479ab36440a316b6f2f
+Author: Claude <noreply@anthropic.com>
+Date:   Sun Sep 27 17:56:29 2026 +0900
+
+    feat: implement PermissionCollector for monitoring extensions
+
+diff --git a/src/PermissionCollector.ts b/src/PermissionCollector.ts
+index 9f67026..79ceada 100644
+--- a/src/PermissionCollector.ts
++++ b/src/PermissionCollector.ts
+@@ -1,5 +1,79 @@
++import * as vscode from 'vscode';
++import { Permission, ExtensionConfig } from './types';
++
++const KNOWN_EXTENSIONS: ExtensionConfig[] = [
++  {
++    extensionId: 'anthropic.claude',
++    extensionName: 'Claude',
++    settingsKey: 'claude.permissions'
++  },
++  {
++    extensionId: 'ms-python.python',
++    extensionName: 'Python',
++    settingsKey: 'python.linting'
++  }
++  // Can extend with more extensions
++];
++
+ export class PermissionCollector {
+-  dispose() {
+-    // To be implemented in Task 2
++  private _onPermissionsChanged = new vscode.EventEmitter<Permission[]>();
++  public onPermissionsChanged = this._onPermissionsChanged.event;
++
++  private permissionsMap: Map<string, Permission> = new Map();
++  private disposables: vscode.Disposable[] = [];
++
++  constructor() {
++    this.startWatching();
++  }
++
++  private startWatching() {
++    // Listen for configuration changes
++    const configListener = vscode.workspace.onDidChangeConfiguration(() => {
++      this.refreshPermissions();
++    });
++
++    this.disposables.push(configListener);
++    this.refreshPermissions();
++  }
++
++  private async refreshPermissions() {
++    const newPermissions = new Map<string, Permission>();
++
++    // Claude extension permissions
++    const claudePerms = await this.collectClaudePermissions();
++    claudePerms.forEach(p => newPermissions.set(p.id, p));
++
++    this.permissionsMap = newPermissions;
++    this._onPermissionsChanged.fire(Array.from(newPermissions.values()));
++  }
++
++  private async collectClaudePermissions(): Promise<Permission[]> {
++    const config = vscode.workspace.getConfiguration('claude');
++    const perms = config.get('permissions', {}) as any;
++    const deniedPerms = perms.denied || {};
++
++    const result: Permission[] = [];
++    for (const [name, count] of Object.entries(deniedPerms)) {
++      if (typeof count === 'number' && count > 0) {
++        result.push({
++          id: `claude:${name}`,
++          extensionId: 'anthropic.claude',
++          extensionName: 'Claude',
++          name,
++          description: `Grant ${name} permission to Claude Code`,
++          timestamp: Date.now(),
++          applied: false
++        });
++      }
++    }
++    return result;
++  }
++
++  public async getPermissions(): Promise<Permission[]> {
++    return Array.from(this.permissionsMap.values());
++  }
++
++  public dispose() {
++    this.disposables.forEach(d => d.dispose());
+   }
+ }
+diff --git a/test/PermissionCollector.test.ts b/test/PermissionCollector.test.ts
+new file mode 100644
+index 0000000..f3239f3
+--- /dev/null
++++ b/test/PermissionCollector.test.ts
+@@ -0,0 +1,28 @@
++import * as assert from 'assert';
++import * as vscode from 'vscode';
++import { PermissionCollector } from '../src/PermissionCollector';
++
++suite('PermissionCollector', () => {
++  let collector: PermissionCollector;
++
++  setup(() => {
++    collector = new PermissionCollector();
++  });
++
++  teardown(() => {
++    collector.dispose();
++  });
++
++  test('should initialize with empty permissions', async () => {
++    const perms = await collector.getPermissions();
++    assert.strictEqual(Array.isArray(perms), true);
++  });
++
++  test('should emit change event on permission update', (done) => {
++    const subscription = collector.onPermissionsChanged((perms) => {
++      assert.strictEqual(Array.isArray(perms), true);
++      subscription.dispose();
++      done();
++    });
++  });
++});

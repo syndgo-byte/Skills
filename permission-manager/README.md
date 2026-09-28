@@ -1,5 +1,7 @@
 # 🔐 VSCode Permission Manager
 
+> 마지막 업데이트: 2026년 09월 28일 21:24
+
 VSCode에서 **Claude Code, Bash, WebFetch** 등 여러 익스텐션의 permission 요청을 한곳에서 일괄 관리하는 익스텐션입니다.
 
 ## 🎯 기능
