@@ -29,8 +29,6 @@ function loadSignals() {
 }
 
 const SIGNALS = loadSignals();
-  ],
-};
 
 function score(task) {
   const scores = { haiku: 0, sonnet: 0, opus: 0, fable: 0 };

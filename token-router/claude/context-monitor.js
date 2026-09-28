@@ -17,11 +17,20 @@ const st = require('./state').load();
 const THRESHOLD = st.handoffTokens || 80000;
 const LOOP_THRESHOLD = st.loopTokens || 200000;
 
+// Hooks and the status line pass the current tab's transcript on stdin. Without it (a manual run)
+// fall back to the newest transcript, which may belong to another tab.
+function inputTranscript() {
+  if (process.stdin.isTTY) return null;
+  try { return JSON.parse(fs.readFileSync(0, 'utf8')).transcript_path || null; } catch { return null; }
+}
+const TRANSCRIPT = inputTranscript();
+
 function getCache() {
   try {
     if (!fs.existsSync(CACHE_FILE)) return null;
     const cache = JSON.parse(fs.readFileSync(CACHE_FILE, 'utf8'));
     if (Date.now() - cache.timestamp > CACHE_TTL) return null;
+    if (TRANSCRIPT && cache.data && cache.data.file !== TRANSCRIPT) return null;
     return cache.data;
   } catch { return null; }
 }
@@ -53,7 +62,7 @@ function getLatestTranscript() {
 }
 
 function measure() {
-  const file = getLatestTranscript();
+  const file = TRANSCRIPT || getLatestTranscript();
   if (!file) return null;
 
   let lines = [];
@@ -125,6 +134,7 @@ function main() {
     atLoopThreshold: data.context >= LOOP_THRESHOLD,
     thresholdPercent,
     loopThresholdPercent,
+    file: data.file,
     recommendation: data.context >= LOOP_THRESHOLD ? 'STOP_LOOP' : (data.context >= THRESHOLD ? 'NEW_SESSION' : 'CONTINUE'),
   };
 
