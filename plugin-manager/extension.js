@@ -243,7 +243,7 @@ class InstalledProvider {
       const dir = server && mcp.activityDir(server);
       const policy = dir && mcp.readPolicy(dir);
       if (!policy || !policy.hub_url) return;
-      const data = await mcp.fetchHub(policy.hub_url);
+      const data = await mcp.fetchHub(policy.hub_url).catch((e) => ({ error: e.message }));
       this.hub[s.name] = { data, url: policy.hub_url, threshold: policy.quota_threshold_pct ?? 90, at: Date.now() };
     }));
     this._emitter.fire();

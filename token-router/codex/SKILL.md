@@ -5,8 +5,8 @@ description: Codex의 토큰 낭비를 줄이고 큰 작업의 모델·effort �
 
 # Codex token-router
 
-위치: D:/Codex/_Skills/token-router.
-도구: python D:/Codex/_Skills/token-router/scripts/router.py <command>.
+위치: D:/Skills/token-router/codex.
+도구: python D:/Skills/token-router/codex/scripts/router.py <command>.
 
 ## 작업 방식
 - 큰 작업은 검증 가능한 단위로 나눈다. 간단한 요청에 계획표나 라우터 호출을 추가하지 않는다.

@@ -66,15 +66,22 @@ function readPolicy(dir) {
 // Per-tool plan and quota from the MCP Hub (the same endpoint the router reads).
 function fetchHub(hubUrl) {
   return new Promise((resolve) => {
-    const req = http.get(`${hubUrl.replace(/\/$/, '')}/ai/tools`, { timeout: 4000 }, (res) => {
-      let body = '';
-      res.setEncoding('utf8');
-      res.on('data', (c) => { body += c; });
-      res.on('end', () => {
-        if (res.statusCode >= 400) return resolve({ error: `HTTP ${res.statusCode}` });
-        try { resolve(JSON.parse(body)); } catch (e) { resolve({ error: e.message }); }
+    // A bad hub_url (e.g. port out of range) throws synchronously; report it instead of hanging.
+    let req;
+    try {
+      req = http.get(`${hubUrl.replace(/\/$/, '')}/ai/tools`, { timeout: 4000 }, (res) => {
+        let body = '';
+        res.setEncoding('utf8');
+        res.on('data', (c) => { body += c; });
+        res.on('end', () => {
+          if (res.statusCode >= 400) return resolve({ error: `HTTP ${res.statusCode}` });
+          try { resolve(JSON.parse(body)); } catch (e) { resolve({ error: e.message }); }
+        });
       });
-    });
+    } catch (e) {
+      resolve({ error: e.message });
+      return;
+    }
     req.on('timeout', () => req.destroy(new Error('시간 초과')));
     req.on('error', (e) => resolve({ error: e.message }));
   });
