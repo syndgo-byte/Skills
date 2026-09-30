@@ -1,6 +1,6 @@
 # Model Router
 
-> 마지막 업데이트: 2026년 09월 30일 20:50
+> 마지막 업데이트: 2026년 09월 30일 20:56
 
 작업 유형과 MCP Hub의 사용량을 기준으로 Claude Code, Codex, Antigravity를
 선택하는 MCP stdio 서버입니다. 코어는 Python 표준 라이브러리만 사용하며,
@@ -30,3 +30,18 @@ Antigravity의 `alt_models`로 작업별 모델을 지정할 수 있습니다.
 설정은 호출마다 다시 읽습니다. 상대 `runs_log` 경로는 패키지 폴더 기준이며,
 기본 로그는 `runs.jsonl`입니다. `report` 형식은 `{도구: {작업유형: 통계}}`입니다.
 로그 수정과 실행은 순차 호출을 전제로 합니다.
+
+## 난도별 모델 (tier)
+
+`delegate`/`route`는 `tier`(light · standard · complex)를 받습니다. 생략하면 프롬프트 키워드로 판정합니다(token-router와 같은 규칙).
+`policy.json`의 `tools.<도구>.tiers`에서 tier별 모델과 effort를 정합니다.
+
+| tier | codex | antigravity |
+|---|---|---|
+| light | gpt-6-luna / low | gemini-3.8-flash-low |
+| standard | gpt-6-sol / medium | gemini-3.8-flash-medium |
+| complex | gpt-6-astra / high | gemini-3.8-flash-high |
+
+- 모델 id는 `agy models`, `codex debug models`로 실제 목록을 확인해 씁니다.
+- antigravity의 review·design 작업은 tier와 무관하게 `alt_models`(claude-sonnet-4-6)가 우선합니다.
+- 실행 기록(`runs.jsonl`)에 tier·model·effort가 남아 `report`로 비교할 수 있습니다.

@@ -198,3 +198,19 @@ def test_server_wrappers(policy, monkeypatch):
         return {"run_id": "fake"}
     monkeypatch.setattr(core, "delegate", fake_delegate)
     assert server.delegate("codex", "hi", ".", "test") == {"run_id": "fake"}
+
+
+def test_tiers(policy, tmp_path):
+    assert core.classify_tier("보안 취약점 원인 분석") == "complex"
+    assert core.classify_tier("버그 수정") == "standard"
+    assert core.classify_tier("오타 목록") == "light"
+    assert core.classify_tier("hello") == "standard"
+    real = json.loads((Path(core.__file__).parent / "policy.json").read_text(encoding="utf-8"))
+    assert core.resolve_model("codex", "implement", real, "light") == ("gpt-6-luna", "low")
+    assert core.resolve_model("codex", "implement", real, "complex") == ("gpt-6-astra", "high")
+    assert core.resolve_model("antigravity", "implement", real, "complex")[0] == "gemini-3.8-flash-high"
+    assert core.resolve_model("antigravity", "review", real, "complex") == ("claude-sonnet-4-6", None)
+    argv, _ = core.build_command("codex", "x", str(tmp_path), "gpt-6-astra", real, "high")
+    assert argv[-3:] == ["-c", 'model_reasoning_effort="high"', "-"] and "-m" in argv
+    with pytest.raises(ValueError, match="난도"):
+        core.delegate("codex", "x", tmp_path, "test", policy, lambda: {"tools": []}, tier="huge")

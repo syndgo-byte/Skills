@@ -5,6 +5,7 @@ import glob
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import time
@@ -55,14 +56,40 @@ def assess(tool_id, quota, now, threshold):
     return result
 
 
-def _model(tool_id, task_type, policy):
+TIERS = ("light", "standard", "complex")
+_COMPLEX = re.compile(r"설계|아키텍처|보안|취약|원인|디버깅|대규모|race condition|architecture|security|root cause|debug", re.I)
+_STANDARD = re.compile(r"구현|추가|만들|테스트|변환|리팩터|수정|고쳐|버그|implement|build|test|refactor|fix|bug", re.I)
+_LIGHT = re.compile(r"목록|검색|오타|번역|요약|list|search|typo|translate|summari", re.I)
+
+
+def classify_tier(prompt):
+    """Difficulty tier from the prompt text (same keyword rules as token-router)."""
+    if _COMPLEX.search(prompt):
+        return "complex"
+    if _STANDARD.search(prompt):
+        return "standard"
+    if _LIGHT.search(prompt):
+        return "light"
+    return "standard"
+
+
+def resolve_model(tool_id, task_type, policy, tier=None):
+    """(model, effort) for a tool: alt_models by task type, else the tier table, else the flat model."""
     config = policy.get("tools", {}).get(tool_id, {})
-    if tool_id == "antigravity":
-        return config.get("alt_models", {}).get(task_type, config.get("model"))
-    return config.get("model")
+    alt = config.get("alt_models", {}).get(task_type)
+    if alt:
+        return alt, None
+    entry = (config.get("tiers") or {}).get(tier or "standard")
+    if entry:
+        return entry.get("model"), entry.get("effort")
+    return config.get("model"), None
 
 
-def route(task_type, quota, policy, now=None):
+def _model(tool_id, task_type, policy, tier=None):
+    return resolve_model(tool_id, task_type, policy, tier)[0]
+
+
+def route(task_type, quota, policy, now=None, tier=None):
     if task_type not in policy["roles"]:
         raise ValueError(f"알 수 없는 작업 유형: {task_type}")
     now = time.time() if now is None else now
@@ -70,14 +97,15 @@ def route(task_type, quota, policy, now=None):
     for tool_id in policy["roles"][task_type]:
         assessment = assess(tool_id, quota, now, policy["quota_threshold_pct"])
         if assessment["available"]:
-            return {"tool": tool_id, "model": _model(tool_id, task_type, policy),
+            model, effort = resolve_model(tool_id, task_type, policy, tier)
+            return {"tool": tool_id, "model": model, "effort": effort,
                     "reason": assessment["reason"], "skipped": skipped}
         skipped.append({"tool": tool_id, "reason": assessment["reason"]})
     return {"tool": None, "model": None, "reason": "사용 가능한 도구 없음",
             "skipped": skipped}
 
 
-def build_command(tool_id, prompt, cwd, model, policy):
+def build_command(tool_id, prompt, cwd, model, policy, effort=None):
     if tool_id == "claude":
         raise ValueError("claude는 호출자 자신이라 위임할 수 없습니다")
     if tool_id not in ("codex", "antigravity"):
@@ -94,6 +122,8 @@ def build_command(tool_id, prompt, cwd, model, policy):
         argv = [exe, "exec", "-C", str(cwd), "-s", "workspace-write"]
         if model:
             argv.extend(["-m", model])
+        if effort:
+            argv.extend(["-c", f'model_reasoning_effort="{effort}"'])
         return argv + ["-"], prompt
     argv = [exe, "-p", prompt, "--mode", "accept-edits", "--add-dir", str(cwd)]
     if model:
@@ -126,12 +156,15 @@ def _text(value):
 
 
 def delegate(tool_id, prompt, cwd, task_type, policy, quota_fn,
-             runner=subprocess.run, now=time.time):
+             runner=subprocess.run, now=time.time, tier=None):
     cwd = _validate_cwd(cwd, policy)
     if task_type not in policy["roles"]:
         raise ValueError(f"알 수 없는 작업 유형: {task_type}")
-    model = _model(tool_id, task_type, policy)
-    argv, stdin = build_command(tool_id, prompt, cwd, model, policy)
+    tier = tier or classify_tier(prompt)
+    if tier not in TIERS:
+        raise ValueError(f"알 수 없는 난도: {tier}")
+    model, effort = resolve_model(tool_id, task_type, policy, tier)
+    argv, stdin = build_command(tool_id, prompt, cwd, model, policy, effort)
     before = _snapshot(quota_fn(), policy, now())
     started = now()
     run_id = uuid.uuid4().hex[:8]
@@ -161,13 +194,13 @@ def delegate(tool_id, prompt, cwd, task_type, policy, quota_fn,
              if before[tool_id] is not None and after[tool_id] is not None else None)
     record = {"run_id": run_id, "ts": started,
               "task_type": task_type, "tool": tool_id, "model": model,
-              "cwd": str(cwd), "duration_sec": duration, "exit_code": exit_code,
+              "tier": tier, "effort": effort, "cwd": str(cwd), "duration_sec": duration, "exit_code": exit_code,
               "quota_before": before, "quota_after": after,
               "delta_pct": delta, "result": None}
     with Path(policy["runs_log"]).open("a", encoding="utf-8") as stream:
         stream.write(json.dumps(record, ensure_ascii=False) + "\n")
-    return {"run_id": record["run_id"], "exit_code": exit_code,
-            "output": output[-4000:], "delta_pct": delta, "duration_sec": duration}
+    return {"run_id": record["run_id"], "tier": tier, "model": model,
+            "effort": effort, "exit_code": exit_code, "output": output[-4000:], "delta_pct": delta, "duration_sec": duration}
 
 
 def _records(log_path):

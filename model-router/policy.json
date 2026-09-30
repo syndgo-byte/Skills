@@ -1,25 +1,90 @@
 {
   "hub_url": "http://127.0.0.1:8000",
   "quota_threshold_pct": 85,
-  "allowed_roots": ["D:\\Vibe_coding"],
+  "allowed_roots": [
+    "D:\\Vibe_coding"
+  ],
   "timeout_sec": 900,
   "runs_log": "runs.jsonl",
   "roles": {
-    "investigate": ["claude", "antigravity", "codex"],
-    "design": ["claude", "antigravity", "codex"],
-    "review": ["claude", "antigravity", "codex"],
-    "git": ["claude", "codex", "antigravity"],
-    "implement": ["codex", "antigravity", "claude"],
-    "test": ["codex", "antigravity", "claude"],
-    "refactor": ["codex", "antigravity", "claude"],
-    "large": ["antigravity", "codex", "claude"]
+    "investigate": [
+      "claude",
+      "antigravity",
+      "codex"
+    ],
+    "design": [
+      "claude",
+      "antigravity",
+      "codex"
+    ],
+    "review": [
+      "claude",
+      "antigravity",
+      "codex"
+    ],
+    "git": [
+      "claude",
+      "codex",
+      "antigravity"
+    ],
+    "implement": [
+      "codex",
+      "antigravity",
+      "claude"
+    ],
+    "test": [
+      "codex",
+      "antigravity",
+      "claude"
+    ],
+    "refactor": [
+      "codex",
+      "antigravity",
+      "claude"
+    ],
+    "large": [
+      "antigravity",
+      "codex",
+      "claude"
+    ]
   },
   "tools": {
-    "codex": {"exe_glob": "%LOCALAPPDATA%\\OpenAI\\Codex\\bin\\*\\codex.exe", "model": null},
+    "codex": {
+      "exe_glob": "%LOCALAPPDATA%\\OpenAI\\Codex\\bin\\*\\codex.exe",
+      "model": null,
+      "tiers": {
+        "light": {
+          "model": "gpt-6-luna",
+          "effort": "low"
+        },
+        "standard": {
+          "model": "gpt-6-sol",
+          "effort": "medium"
+        },
+        "complex": {
+          "model": "gpt-6-astra",
+          "effort": "high"
+        }
+      }
+    },
     "antigravity": {
       "exe": "%USERPROFILE%\\.gemini\\bin\\agy.exe",
       "model": "gemini-3.1-pro-high",
-      "alt_models": {"review": "claude-sonnet-4-6", "design": "claude-sonnet-4-6"}
+      "alt_models": {
+        "review": "claude-sonnet-4-6",
+        "design": "claude-sonnet-4-6"
+      },
+      "tiers": {
+        "light": {
+          "model": "gemini-3.8-flash-low"
+        },
+        "standard": {
+          "model": "gemini-3.8-flash-medium"
+        },
+        "complex": {
+          "model": "gemini-3.8-flash-high"
+        }
+      }
     }
   }
 }

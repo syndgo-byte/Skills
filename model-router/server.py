@@ -17,15 +17,17 @@ def _policy():
     return policy
 
 
-def route(task_type: str):
+def route(task_type: str, tier: str | None = None):
     policy = _policy()
-    return core.route(task_type, core.fetch_quota(policy["hub_url"]), policy)
+    return core.route(task_type, core.fetch_quota(policy["hub_url"]), policy, tier=tier)
 
 
-def delegate(tool: str, prompt: str, cwd: str, task_type: str):
+def delegate(tool: str, prompt: str, cwd: str, task_type: str, tier: str | None = None):
+    """tier: light | standard | complex. Omitted, it is inferred from the prompt."""
     policy = _policy()
+    extra = {"tier": tier} if tier else {}
     return core.delegate(tool, prompt, cwd, task_type, policy,
-                         quota_fn=lambda: core.fetch_quota(policy["hub_url"]))
+                         quota_fn=lambda: core.fetch_quota(policy["hub_url"]), **extra)
 
 
 def status():
