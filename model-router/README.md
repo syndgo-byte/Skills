@@ -1,6 +1,6 @@
 # Model Router
 
-> 마지막 업데이트: 2026년 10월 01일 05:59
+> 마지막 업데이트: 2026년 10월 01일 08:55
 
 작업 유형과 MCP Hub의 사용량을 기준으로 Claude Code, Codex, Antigravity를
 선택하는 MCP stdio 서버입니다. 코어는 Python 표준 라이브러리만 사용하며,
