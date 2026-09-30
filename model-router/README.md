@@ -1,6 +1,6 @@
 # Model Router
 
-> 마지막 업데이트: 2026년 10월 01일 05:14
+> 마지막 업데이트: 2026년 10월 01일 05:41
 
 작업 유형과 MCP Hub의 사용량을 기준으로 Claude Code, Codex, Antigravity를
 선택하는 MCP stdio 서버입니다. 코어는 Python 표준 라이브러리만 사용하며,
@@ -56,3 +56,28 @@ plugin-manager 확장에서 최근 작업 5건과 in-flight 실행을 추적합�
 두 폴더는 각자 설치해도 동작합니다.
 - 옆에 `token-router`가 있으면 그 `codex/config.json`, `antigravity/config.json`의 `models`를 tier 표로 씁니다(설정을 한 곳에서 관리). 위치가 다르면 `policy.json`에 `token_router_dir`을 지정합니다.
 - 없거나 파일이 깨져 있으면 `policy.json`의 `tools.<도구>.tiers`로 동작합니다.
+
+## 사용 예시
+
+### 플러그인 매니저 도구 상태 모니터링
+
+Claude Code의 **플러그인 매니저**에서 등록된 각 도구(Claude, Codex, Antigravity)의 상태를 실시간으로 확인할 수 있습니다. 도구별 플랜, 한도 사용률, 갱신일, Hub 연결 상태를 한눈에 볼 수 있습니다.
+
+![model-router 플러그인 상태](images/3.png)
+
+- **Claude**: 평가판(pro), 한도 72% 사용 중 (위험 수준)
+- **Codex**: 유료 플랜(plus), 한도 20% 사용 중, gpt-6-astra 모델 활성
+- **Antigravity**: 팀 플랜(TEAMS_TIER_PRO), 한도 0% (갱신 대기)
+- **Hub 연결**: 정상 작동 중, 갱신일/입출 상태 표시
+
+### Agent map으로 작업 추적
+
+`route()` 및 `delegate()` 호출 시 생성되는 에이전트의 실행 기록을 **Agent map**에서 추적합니다. 각 에이전트의 작업 내용, 소요 시간, 토큰 사용량을 확인할 수 있습니다.
+
+![Agent map 실행 기록](images/4.png)
+
+- **EMS 인입 기능 구현**: Haiku 4.5 모델, 76.7k 토큰 사용
+- **Codex 도배/능 당자 + 읽음 시스템**: 4분 8초, 57.8k 토큰
+- **Codex: desk.py 분류 기초 구현**: 7분 41초, 57.2k 토큰
+
+`report()` 도구로 도구별/작업유형별 통계를 조회하면, 평균 사용량과 테스트 통과율로 성능을 비교할 수 있습니다.
