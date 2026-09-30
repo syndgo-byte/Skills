@@ -2,6 +2,7 @@
 // User-scope MCP servers from ~/.claude.json and their health via `claude mcp list`.
 const { execFile } = require('child_process');
 const fs = require('fs');
+const http = require('http');
 const os = require('os');
 const path = require('path');
 const { buildEnv } = require('./cli');
@@ -58,4 +59,37 @@ function readActivity(dir, recent = 5) {
   return { active, runs };
 }
 
-module.exports = { USER_CONFIG, listUser, parseHealth, checkHealth, activityDir, readActivity };
+function readPolicy(dir) {
+  try { return JSON.parse(fs.readFileSync(path.join(dir, 'policy.json'), 'utf8')); } catch { return null; }
+}
+
+// Per-tool plan and quota from the MCP Hub (the same endpoint the router reads).
+function fetchHub(hubUrl) {
+  return new Promise((resolve) => {
+    const req = http.get(`${hubUrl.replace(/\/$/, '')}/ai/tools`, { timeout: 4000 }, (res) => {
+      let body = '';
+      res.setEncoding('utf8');
+      res.on('data', (c) => { body += c; });
+      res.on('end', () => {
+        if (res.statusCode >= 400) return resolve({ error: `HTTP ${res.statusCode}` });
+        try { resolve(JSON.parse(body)); } catch (e) { resolve({ error: e.message }); }
+      });
+    });
+    req.on('timeout', () => req.destroy(new Error('시간 초과')));
+    req.on('error', (e) => resolve({ error: e.message }));
+  });
+}
+
+// Mirrors model-router core.assess(): only limits[] count, usage.used_pct is the context window.
+function assess(tool, threshold) {
+  const values = (tool.limits || []).map((l) => l.used_pct).filter((v) => v != null).map(Number);
+  const worst = values.length ? Math.max(...values) : null;
+  let reason = null;
+  if (tool.paid === false) reason = '유료 플랜 아님';
+  else if (tool.renews_at && Date.parse(tool.renews_at) < Date.now()) reason = '요금제 갱신일 지남';
+  else if (tool.status !== 'ok') reason = `상태 ${tool.status}`;
+  else if (worst != null && worst >= threshold) reason = `한도 ${worst}% ≥ ${threshold}%`;
+  return { available: !reason, worst, reason };
+}
+
+module.exports = { USER_CONFIG, listUser, parseHealth, checkHealth, activityDir, readActivity, readPolicy, fetchHub, assess };

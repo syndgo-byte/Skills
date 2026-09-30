@@ -62,6 +62,32 @@ function componentSummary(c) {
   return parts.join(' · ');
 }
 
+function agoText(sec) {
+  const m = Math.round((Date.now() / 1000 - sec) / 60);
+  return m < 1 ? '방금' : m < 60 ? `${m}분 전` : m < 1440 ? `${Math.round(m / 60)}시간 전` : `${Math.round(m / 1440)}일 전`;
+}
+
+// In-flight runs, then recent finished runs, of a model-router style MCP server.
+function runChildren(act) {
+  return [
+    ...act.active.map((a) => {
+      const c = new vscode.TreeItem(`${a.tool} · ${a.task_type}`);
+      c.description = `실행 중 · ${agoText(a.started)} 시작 · ${a.cwd}`;
+      c.iconPath = new vscode.ThemeIcon('sync~spin');
+      return c;
+    }),
+    ...act.runs.map((r) => {
+      const ok = r.exit_code === 0;
+      const c = new vscode.TreeItem(`${r.tool} · ${r.task_type}`);
+      c.description = `${ok ? '성공' : `실패(${r.exit_code})`} · ${agoText(r.ts)} · ${Math.round(r.duration_sec)}초`
+        + `${r.delta_pct != null ? ` · 한도 +${r.delta_pct}%` : ''}`;
+      c.tooltip = `${r.cwd}\nrun_id ${r.run_id}`;
+      c.iconPath = new vscode.ThemeIcon(ok ? 'check' : 'close', new vscode.ThemeColor(ok ? 'charts.green' : 'charts.red'));
+      return c;
+    }),
+  ];
+}
+
 // ---------- Installed plugins tree ----------
 
 class InstalledProvider {
@@ -69,11 +95,19 @@ class InstalledProvider {
     this._emitter = new vscode.EventEmitter();
     this.onDidChangeTreeData = this._emitter.event;
     this.plugins = [];
+    this.hub = {};
     this.load();
   }
 
+  // A user-scope MCP server registered under the same name as a personal skill belongs to that skill.
+  linkedServer(s) {
+    return this.mcpServers.find((m) => m.name === s.name);
+  }
+
   personalItem(s) {
-    const it = new vscode.TreeItem(s.name, vscode.TreeItemCollapsibleState.None);
+    const server = this.linkedServer(s);
+    const it = new vscode.TreeItem(s.name, server
+      ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
     it.personal = s;
     it.id = s.id;
     const key = `personal:${s.name}`;
@@ -81,7 +115,9 @@ class InstalledProvider {
     const tags = [];
     if (!s.enabled) tags.push('(꺼짐)');
     if (use && use.count) tags.push(`${this.usage.days}일 ${use.count}회`);
-    it.description = `${tags.length ? `${tags.join(' ')} · ` : ''}${oneLine(localized(key, s.description), 60)}`;
+    const summary = server && this.linkedSummary(s, server);
+    if (summary) tags.push(summary);
+    it.description = `${tags.length ? `${tags.join(' ')} · ` : ''}${oneLine(localized(key, s.description), server ? 30 : 60)}`;
     it.checkboxState = s.enabled ? vscode.TreeItemCheckboxState.Checked : vscode.TreeItemCheckboxState.Unchecked;
     it.iconPath = new vscode.ThemeIcon(s.enabled ? 'lightbulb' : 'circle-slash');
     it.contextValue = 'personal';
@@ -94,8 +130,123 @@ class InstalledProvider {
       s.scripts.length ? `- 스크립트: ${s.scripts.join(', ')}` : '',
       use ? `- 최근 ${this.usage.days}일 사용 ${use.count}회` : '',
     ].join('\n'));
-    it.command = { command: 'vscode.open', title: '열기', arguments: [vscode.Uri.file(s.file)] };
+    if (server) {
+      // Clicking expands the status rows; SKILL.md opens from the inline button instead.
+      it.contextValue = 'personal.linked';
+      it.group = true;
+      it.children = this.linkedChildren(s, server);
+    } else {
+      it.command = { command: 'vscode.open', title: '열기', arguments: [vscode.Uri.file(s.file)] };
+    }
     return it;
+  }
+
+  mcpState(s) {
+    const h = this.mcpHealth && this.mcpHealth[s.name];
+    const text = !this.mcpHealth ? '확인 중…' : this.mcpHealth.error ? '확인 실패' : h ? (h.ok ? '연결됨' : h.text) : '결과 없음';
+    return { h, text };
+  }
+
+  // One-line summary on the skill row, e.g. "정상 3/3 · 연결됨".
+  linkedSummary(s, server) {
+    const hub = this.hub[s.name];
+    const tools = hub && hub.data && hub.data.tools;
+    const parts = [];
+    if (tools) {
+      const ok = tools.filter((t) => mcp.assess(t, hub.threshold).available).length;
+      parts.push(`정상 ${ok}/${tools.length}`);
+    } else if (hub && hub.data && hub.data.error) parts.push('Hub 연결 실패');
+    parts.push(this.mcpState(server).text);
+    return parts.join(' · ');
+  }
+
+  linkedChildren(s, server) {
+    const out = [];
+    const { h, text } = this.mcpState(server);
+    const srv = new vscode.TreeItem('MCP 서버');
+    srv.id = `personal:${s.name}:mcp`;
+    srv.description = `${text} · ${server.type}`;
+    srv.tooltip = `실행: ${server.target}\n설정 파일: ${mcp.USER_CONFIG}`;
+    srv.iconPath = !h ? new vscode.ThemeIcon('plug')
+      : new vscode.ThemeIcon(h.ok ? 'pass-filled' : 'error', new vscode.ThemeColor(h.ok ? 'charts.green' : 'charts.red'));
+    out.push(srv);
+
+    const hub = this.hub[s.name];
+    const d = hub && hub.data;
+    const sync = new vscode.TreeItem('Hub 동기화');
+    sync.id = `personal:${s.name}:hub`;
+    if (!hub) {
+      sync.description = '확인 중…';
+      sync.iconPath = new vscode.ThemeIcon('sync~spin');
+    } else if (d.error) {
+      sync.description = `연결 실패 · ${d.error}`;
+      sync.tooltip = `${hub.url}/ai/tools\n실패하면 라우터는 모든 도구를 사용 가능으로 간주합니다.`;
+      sync.iconPath = new vscode.ThemeIcon('error', new vscode.ThemeColor('charts.red'));
+    } else {
+      const offline = d.router_online === false;
+      const updated = d.updated_at ? Date.parse(d.updated_at) / 1000 : null;
+      sync.description = `${offline ? '라우터 오프라인' : '동기화 중'}`
+        + `${updated ? ` · 갱신 ${agoText(updated)}` : ''} · 확인 ${agoText(hub.at / 1000)}`;
+      sync.tooltip = `${hub.url}/ai/tools (30초마다 확인)`;
+      sync.iconPath = new vscode.ThemeIcon(offline ? 'warning' : 'sync',
+        new vscode.ThemeColor(offline ? 'charts.yellow' : 'charts.green'));
+    }
+    out.push(sync);
+
+    const dir = mcp.activityDir(server);
+    const act = dir ? mcp.readActivity(dir) : { active: [], runs: [] };
+    const names = { claude: 'Claude', codex: 'Codex', antigravity: 'Antigravity' };
+    const toMs = (v) => (typeof v === 'number' ? v : Date.parse(v));
+    const when = (ms) => new Date(ms).toLocaleString([], { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    for (const t of (d && d.tools) || []) {
+      const a = mcp.assess(t, hub.threshold);
+      const busy = act.active.filter((r) => r.tool === t.id).length;
+      const name = names[t.id] || t.id;
+      const it = new vscode.TreeItem(name);
+      it.id = `personal:${s.name}:tool:${t.id}`;
+      const reset = (t.limits || []).map((l) => l.reset_at).filter(Boolean).map(toMs).sort((x, y) => x - y)[0];
+      it.description = [
+        busy ? `작업 중 ${busy}건` : a.available ? '정상' : `사용 불가 · ${a.reason}`,
+        t.plan || (t.paid ? '유료' : '무료'),
+        a.worst != null ? `한도 ${a.worst}%` : '',
+        reset && reset > Date.now() ? `리셋 ${when(reset)}` : '',
+        t.id === 'claude' ? '호출자 (위임 대상 아님)' : t.usage && t.usage.detail ? t.usage.detail : '',
+      ].filter(Boolean).join(' · ');
+      it.tooltip = md([
+        `**${name}** — ${a.available ? '$(check) 사용 가능' : `$(error) ${a.reason}`}`,
+        '',
+        `- 상태: \`${t.status}\` · 플랜: ${t.plan || '-'}${t.paid === false ? ' (무료)' : ''}`,
+        ...(t.limits || []).map((l) => `- 한도 ${l.used_pct}%${l.reset_at ? ` · 리셋 ${new Date(toMs(l.reset_at)).toLocaleString()}` : ''}`),
+        (t.limits || []).length ? '' : '- 한도 정보 없음 (Hub가 제공하지 않음)',
+        `- 차단 기준: ${hub.threshold}%`,
+      ].join('\n'));
+      it.iconPath = busy ? new vscode.ThemeIcon('sync~spin', new vscode.ThemeColor('charts.blue'))
+        : new vscode.ThemeIcon(a.available ? 'pass-filled' : 'error', new vscode.ThemeColor(a.available ? 'charts.green' : 'charts.red'));
+      out.push(it);
+    }
+
+    const runs = runChildren(act);
+    if (runs.length) {
+      const g = new vscode.TreeItem(`최근 작업 (${runs.length})`, vscode.TreeItemCollapsibleState.Collapsed);
+      g.id = `personal:${s.name}:runs`;
+      g.iconPath = new vscode.ThemeIcon('history');
+      g.group = true;
+      g.children = runs;
+      out.push(g);
+    }
+    return out;
+  }
+
+  async refreshHub() {
+    await Promise.all(this.personal.map(async (s) => {
+      const server = this.linkedServer(s);
+      const dir = server && mcp.activityDir(server);
+      const policy = dir && mcp.readPolicy(dir);
+      if (!policy || !policy.hub_url) return;
+      const data = await mcp.fetchHub(policy.hub_url);
+      this.hub[s.name] = { data, url: policy.hub_url, threshold: policy.quota_threshold_pct ?? 90, at: Date.now() };
+    }));
+    this._emitter.fire();
   }
 
   mcpItem(s) {
@@ -107,7 +258,7 @@ class InstalledProvider {
     it.id = `mcp:${s.name}`;
     const state = !this.mcpHealth ? '확인 중…' : this.mcpHealth.error ? '확인 실패'
       : h ? (h.ok ? '연결됨' : h.text) : '결과 없음';
-    const ago = (sec) => { const m = Math.round((Date.now() / 1000 - sec) / 60); return m < 1 ? '방금' : m < 60 ? `${m}분 전` : `${Math.round(m / 60)}시간 전`; };
+    const ago = agoText;
     const busy = act && act.active.length;
     const doing = !act ? '' : busy ? `작업 중 ${busy}건 (${act.active.map((a) => a.tool).join(', ')})`
       : act.runs.length ? `대기 · 마지막 작업 ${ago(act.runs[0].ts)}` : '대기 · 작업 기록 없음';
@@ -117,23 +268,7 @@ class InstalledProvider {
         : new vscode.ThemeIcon(h.ok ? 'pass-filled' : 'error', new vscode.ThemeColor(h.ok ? 'charts.green' : 'charts.red'));
     if (act) {
       it.group = true;
-      it.children = [
-        ...act.active.map((a) => {
-          const c = new vscode.TreeItem(`${a.tool} · ${a.task_type}`);
-          c.description = `실행 중 · ${ago(a.started)} 시작 · ${a.cwd}`;
-          c.iconPath = new vscode.ThemeIcon('sync~spin');
-          return c;
-        }),
-        ...act.runs.map((r) => {
-          const ok = r.exit_code === 0;
-          const c = new vscode.TreeItem(`${r.tool} · ${r.task_type}`);
-          c.description = `${ok ? '성공' : `실패(${r.exit_code})`} · ${ago(r.ts)} · ${Math.round(r.duration_sec)}초`
-            + `${r.delta_pct != null ? ` · 한도 +${r.delta_pct}%` : ''}`;
-          c.tooltip = `${r.cwd}\nrun_id ${r.run_id}`;
-          c.iconPath = new vscode.ThemeIcon(ok ? 'check' : 'close', new vscode.ThemeColor(ok ? 'charts.green' : 'charts.red'));
-          return c;
-        }),
-      ];
+      it.children = runChildren(act);
     }
     it.tooltip = md([
       `**${s.name}** — 사용자 MCP 서버 (${state})`,
@@ -227,15 +362,18 @@ class InstalledProvider {
       personal.tooltip = '마켓플레이스가 아닌 ~/.claude/skills 폴더에 직접 둔 스킬입니다. 끄면 ~/.claude/skills-disabled 로 옮겨집니다.';
       personal.group = true;
       personal.children = this.personal.map((s) => this.personalItem(s));
-      const servers = new vscode.TreeItem(`사용자 MCP 서버 (${this.mcpServers.length})`, vscode.TreeItemCollapsibleState.Expanded);
+      // Servers owned by a personal skill are shown under that skill instead.
+      const owned = new Set(this.personal.map((s) => s.name));
+      const standalone = this.mcpServers.filter((m) => !owned.has(m.name));
+      const servers = new vscode.TreeItem(`사용자 MCP 서버 (${standalone.length})`, vscode.TreeItemCollapsibleState.Expanded);
       servers.iconPath = new vscode.ThemeIcon('plug');
       servers.description = '~/.claude.json';
       servers.tooltip = '플러그인이 아니라 claude mcp add 로 직접 등록한 MCP 서버입니다. 연결 상태는 claude mcp list 결과입니다.';
       servers.contextValue = 'mcpGroup';
       servers.group = true;
-      servers.children = this.mcpServers.map((s) => this.mcpItem(s));
+      servers.children = standalone.map((s) => this.mcpItem(s));
       return [...top, ...this.plugins.map((p) => this.pluginItem(p)), personal,
-        ...(this.mcpServers.length ? [servers] : [])];
+        ...(standalone.length ? [servers] : [])];
     }
     if (el.plugin && !el.group) return this.groupItems(el.plugin);
     if (el.group) return el.children;
@@ -713,11 +851,15 @@ function activate(context) {
     if (installed.mcpServers.some((s) => mcp.activityDir(s))) installed.refresh();
   }, 5000);
   context.subscriptions.push({ dispose: () => clearInterval(activityTimer) });
+  // Hub quota for skills that own a router server: on startup, then every 30 seconds.
+  installed.refreshHub();
+  const hubTimer = setInterval(() => installed.refreshHub(), 30000);
+  context.subscriptions.push({ dispose: () => clearInterval(hubTimer) });
 
   const reg = (id, fn) => context.subscriptions.push(vscode.commands.registerCommand(id, fn));
 
   // Update check: cached result on startup, a fresh check when older than 6 hours, then every 6 hours.
-  const UPDATE_KEY = 'cpm.updates';
+  const UPDATE_KEY = 'cpm.updates.v2'; // v2: marketplace-pinned commits count as latest
   const cachedUpdates = context.globalState.get(UPDATE_KEY);
   if (cachedUpdates) installed.setUpdates(cachedUpdates.updates);
   status.refresh();
@@ -813,7 +955,7 @@ function activate(context) {
   });
 
 
-  reg('cpm.refresh', () => { installed.refresh(); status.refresh(); checkMcp(); });
+  reg('cpm.refresh', () => { installed.refresh(); status.refresh(); checkMcp(); installed.refreshHub(); });
 
   reg('cpm.quickToggle', async () => {
     installed.refresh();
@@ -838,6 +980,10 @@ function activate(context) {
     && vscode.env.openExternal(vscode.Uri.parse(item.plugin.homepage)));
 
   reg('cpm.openReadme', (item) => {
+    if (item && item.personal) {
+      vscode.commands.executeCommand('vscode.open', vscode.Uri.file(item.personal.file));
+      return;
+    }
     if (!item || !item.plugin) return;
     const readme = path.join(item.plugin.root, 'README.md');
     if (fs.existsSync(readme)) vscode.commands.executeCommand('markdown.showPreview', vscode.Uri.file(readme));

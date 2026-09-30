@@ -51,7 +51,8 @@ function sourceOf(plugin, knownMarkets, markets) {
   }
   if (src && typeof src === 'object') {
     const repo = src.repo || repoFromUrl(src.url);
-    if (repo) return { repo, dir: (src.path || '').replace(/^\.?\/|\/$/g, '') };
+    // A marketplace may pin the plugin to a commit; `plugin update` never goes past it.
+    if (repo) return { repo, dir: (src.path || '').replace(/^\.?\/|\/$/g, ''), sha: src.sha };
   }
   return marketRepo ? { repo: marketRepo, dir: '' } : null;
 }
@@ -68,8 +69,11 @@ async function check(plugins, env, token) {
     const src = sourceOf(p, knownMarkets, markets);
     if (!src || !p.gitCommitSha) continue;
     try {
-      if (!heads.has(src.repo)) heads.set(src.repo, gitHead(src.repo, env));
-      const head = await heads.get(src.repo);
+      let head = src.sha;
+      if (!head) {
+        if (!heads.has(src.repo)) heads.set(src.repo, gitHead(src.repo, env));
+        head = await heads.get(src.repo);
+      }
       if (head.startsWith(p.gitCommitSha) || p.gitCommitSha.startsWith(head)) continue;
 
       const key = `${src.repo}@${p.gitCommitSha}`;
