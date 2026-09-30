@@ -1,5 +1,5 @@
 {
-  "hub_url": "http://127.0.0.1:8000",
+  "hub_url": "http://127.0.0.1:9890",
   "quota_threshold_pct": 85,
   "allowed_roots": [
     "D:\\Vibe_coding"
