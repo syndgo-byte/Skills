@@ -1,6 +1,6 @@
 # Model Router
 
-> 마지막 업데이트: 2026년 09월 30일 21:03
+> 마지막 업데이트: 2026년 09월 30일 22:52
 
 작업 유형과 MCP Hub의 사용량을 기준으로 Claude Code, Codex, Antigravity를
 선택하는 MCP stdio 서버입니다. 코어는 Python 표준 라이브러리만 사용하며,
@@ -9,7 +9,7 @@
 Claude Code에 등록:
 
 ```powershell
-claude mcp add model-router -- python D:\Vibe_coding\mcp_hub\tools\model_router\server.py
+claude mcp add model-router -- python D:\Skills\model-router\server.py
 ```
 
 도구 5개:
@@ -30,6 +30,11 @@ Antigravity의 `alt_models`로 작업별 모델을 지정할 수 있습니다.
 설정은 호출마다 다시 읽습니다. 상대 `runs_log` 경로는 패키지 폴더 기준이며,
 기본 로그는 `runs.jsonl`입니다. `report` 형식은 `{도구: {작업유형: 통계}}`입니다.
 로그 수정과 실행은 순차 호출을 전제로 합니다.
+
+## 실행 기록 (runs.jsonl)
+
+매월 `runs.jsonl`을 `runs-YYYYMM.jsonl`로 로테이션합니다(2026년 9월: `runs-202609.jsonl`).
+plugin-manager 확장에서 최근 작업 5건과 in-flight 실행을 추적합니다.
 
 ## 난도별 모델 (tier)
 

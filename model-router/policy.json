@@ -8,44 +8,36 @@
   "runs_log": "runs.jsonl",
   "roles": {
     "investigate": [
-      "claude",
-      "antigravity",
-      "codex"
+      "codex",
+      "antigravity"
     ],
     "design": [
-      "claude",
-      "antigravity",
-      "codex"
+      "codex",
+      "antigravity"
     ],
     "review": [
-      "claude",
-      "antigravity",
-      "codex"
+      "codex",
+      "antigravity"
     ],
     "git": [
-      "claude",
       "codex",
       "antigravity"
     ],
     "implement": [
       "codex",
-      "antigravity",
-      "claude"
+      "antigravity"
     ],
     "test": [
       "codex",
-      "antigravity",
-      "claude"
+      "antigravity"
     ],
     "refactor": [
       "codex",
-      "antigravity",
-      "claude"
+      "antigravity"
     ],
     "large": [
       "antigravity",
-      "codex",
-      "claude"
+      "codex"
     ]
   },
   "tools": {
