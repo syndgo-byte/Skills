@@ -100,13 +100,41 @@ class InstalledProvider {
 
   mcpItem(s) {
     const h = this.mcpHealth && this.mcpHealth[s.name];
-    const it = new vscode.TreeItem(s.name, vscode.TreeItemCollapsibleState.None);
+    const dir = mcp.activityDir(s);
+    const act = dir && mcp.readActivity(dir);
+    const it = new vscode.TreeItem(s.name, act && (act.active.length || act.runs.length)
+      ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.None);
     it.id = `mcp:${s.name}`;
     const state = !this.mcpHealth ? '확인 중…' : this.mcpHealth.error ? '확인 실패'
       : h ? (h.ok ? '연결됨' : h.text) : '결과 없음';
-    it.description = `${state} · ${s.type}`;
-    it.iconPath = !h ? new vscode.ThemeIcon('plug')
-      : new vscode.ThemeIcon(h.ok ? 'pass-filled' : 'error', new vscode.ThemeColor(h.ok ? 'charts.green' : 'charts.red'));
+    const ago = (sec) => { const m = Math.round((Date.now() / 1000 - sec) / 60); return m < 1 ? '방금' : m < 60 ? `${m}분 전` : `${Math.round(m / 60)}시간 전`; };
+    const busy = act && act.active.length;
+    const doing = !act ? '' : busy ? `작업 중 ${busy}건 (${act.active.map((a) => a.tool).join(', ')})`
+      : act.runs.length ? `대기 · 마지막 작업 ${ago(act.runs[0].ts)}` : '대기 · 작업 기록 없음';
+    it.description = [doing, state, s.type].filter(Boolean).join(' · ');
+    it.iconPath = busy ? new vscode.ThemeIcon('sync~spin', new vscode.ThemeColor('charts.blue'))
+      : !h ? new vscode.ThemeIcon('plug')
+        : new vscode.ThemeIcon(h.ok ? 'pass-filled' : 'error', new vscode.ThemeColor(h.ok ? 'charts.green' : 'charts.red'));
+    if (act) {
+      it.group = true;
+      it.children = [
+        ...act.active.map((a) => {
+          const c = new vscode.TreeItem(`${a.tool} · ${a.task_type}`);
+          c.description = `실행 중 · ${ago(a.started)} 시작 · ${a.cwd}`;
+          c.iconPath = new vscode.ThemeIcon('sync~spin');
+          return c;
+        }),
+        ...act.runs.map((r) => {
+          const ok = r.exit_code === 0;
+          const c = new vscode.TreeItem(`${r.tool} · ${r.task_type}`);
+          c.description = `${ok ? '성공' : `실패(${r.exit_code})`} · ${ago(r.ts)} · ${Math.round(r.duration_sec)}초`
+            + `${r.delta_pct != null ? ` · 한도 +${r.delta_pct}%` : ''}`;
+          c.tooltip = `${r.cwd}\nrun_id ${r.run_id}`;
+          c.iconPath = new vscode.ThemeIcon(ok ? 'check' : 'close', new vscode.ThemeColor(ok ? 'charts.green' : 'charts.red'));
+          return c;
+        }),
+      ];
+    }
     it.tooltip = md([
       `**${s.name}** — 사용자 MCP 서버 (${state})`,
       '',
@@ -680,8 +708,13 @@ function activate(context) {
     mcp.checkHealth(claudePath()).then((h) => installed.setMcpHealth(h));
   };
   checkMcp();
+  // Run activity is read from files, so redraw cheaply while any MCP server keeps a run log.
+  const activityTimer = setInterval(() => {
+    if (installed.mcpServers.some((s) => mcp.activityDir(s))) installed.refresh();
+  }, 5000);
+  context.subscriptions.push({ dispose: () => clearInterval(activityTimer) });
 
-  const reg =(id, fn) => context.subscriptions.push(vscode.commands.registerCommand(id, fn));
+  const reg = (id, fn) => context.subscriptions.push(vscode.commands.registerCommand(id, fn));
 
   // Update check: cached result on startup, a fresh check when older than 6 hours, then every 6 hours.
   const UPDATE_KEY = 'cpm.updates';

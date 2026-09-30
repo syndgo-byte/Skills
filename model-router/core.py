@@ -134,6 +134,13 @@ def delegate(tool_id, prompt, cwd, task_type, policy, quota_fn,
     argv, stdin = build_command(tool_id, prompt, cwd, model, policy)
     before = _snapshot(quota_fn(), policy, now())
     started = now()
+    run_id = uuid.uuid4().hex[:8]
+    # Marker file lets observers (e.g. the plugin-manager extension) see in-flight runs.
+    active = Path(policy["runs_log"]).parent / "active" / f"{run_id}.json"
+    active.parent.mkdir(exist_ok=True)
+    active.write_text(json.dumps({"run_id": run_id, "tool": tool_id, "task_type": task_type,
+                                  "cwd": str(cwd), "started": started}, ensure_ascii=False),
+                      encoding="utf-8")
     try:
         completed = runner(argv, input=stdin, cwd=str(cwd),
                            timeout=policy["timeout_sec"], encoding="utf-8",
@@ -146,11 +153,13 @@ def delegate(tool_id, prompt, cwd, task_type, policy, quota_fn,
     except OSError as exc:
         exit_code = -1
         output = f"실행 실패: {exc}"
+    finally:
+        active.unlink(missing_ok=True)
     duration = now() - started
     after = _snapshot(quota_fn(), policy, now())
     delta = (after[tool_id] - before[tool_id]
              if before[tool_id] is not None and after[tool_id] is not None else None)
-    record = {"run_id": uuid.uuid4().hex[:8], "ts": started,
+    record = {"run_id": run_id, "ts": started,
               "task_type": task_type, "tool": tool_id, "model": model,
               "cwd": str(cwd), "duration_sec": duration, "exit_code": exit_code,
               "quota_before": before, "quota_after": after,

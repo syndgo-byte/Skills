@@ -1,6 +1,7 @@
 'use strict';
 // User-scope MCP servers from ~/.claude.json and their health via `claude mcp list`.
 const { execFile } = require('child_process');
+const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { buildEnv } = require('./cli');
@@ -34,4 +35,27 @@ function checkHealth(claudePath) {
   });
 }
 
-module.exports = { USER_CONFIG, listUser, parseHealth, checkHealth };
+// Folder of a stdio server that keeps run logs (model-router style: policy.json + runs.jsonl + active/).
+function activityDir(server) {
+  const script = server.target.split(' ').find((a) => /\.py$|\.js$/.test(a));
+  if (!script) return null;
+  const dir = path.dirname(script);
+  return fs.existsSync(path.join(dir, 'policy.json')) ? dir : null;
+}
+
+// In-flight runs and the most recent finished runs.
+function readActivity(dir, recent = 5) {
+  const active = [];
+  const activeDir = path.join(dir, 'active');
+  for (const f of (fs.existsSync(activeDir) ? fs.readdirSync(activeDir) : [])) {
+    try { active.push(JSON.parse(fs.readFileSync(path.join(activeDir, f), 'utf8'))); } catch { /* being written */ }
+  }
+  let runs = [];
+  try {
+    runs = fs.readFileSync(path.join(dir, 'runs.jsonl'), 'utf8').split(/\r?\n/).filter(Boolean)
+      .slice(-recent).map((l) => JSON.parse(l)).reverse();
+  } catch { /* no runs yet */ }
+  return { active, runs };
+}
+
+module.exports = { USER_CONFIG, listUser, parseHealth, checkHealth, activityDir, readActivity };

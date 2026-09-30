@@ -118,6 +118,8 @@ def test_delegate_log(policy, tmp_path):
     ticks = iter([100, 101, 106, 107])
     def runner(argv, **kwargs):
         assert argv[0] == "fake-codex"
+        marker, = (tmp_path / "active").glob("*.json")
+        assert json.loads(marker.read_text(encoding="utf-8"))["tool"] == "codex"
         assert kwargs == {"input": "hello", "cwd": str(tmp_path.resolve()),
                           "timeout": 900, "encoding": "utf-8", "errors": "replace",
                           "capture_output": True}
@@ -131,6 +133,7 @@ def test_delegate_log(policy, tmp_path):
     assert row["quota_before"]["codex"] == 10
     assert row["quota_after"]["codex"] == 17
     assert row["result"] is None and row["delta_pct"] == 7
+    assert not list((tmp_path / "active").glob("*.json"))
 
 
 def test_delegate_timeout(policy, tmp_path):
