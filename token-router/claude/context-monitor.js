@@ -19,11 +19,27 @@ const LOOP_THRESHOLD = st.loopTokens || 200000;
 
 // Hooks and the status line pass the current tab's transcript on stdin. Without it (a manual run)
 // fall back to the newest transcript, which may belong to another tab.
-function inputTranscript() {
+function readInput() {
   if (process.stdin.isTTY) return null;
-  try { return JSON.parse(fs.readFileSync(0, 'utf8')).transcript_path || null; } catch { return null; }
+  try { return JSON.parse(fs.readFileSync(0, 'utf8')); } catch { return null; }
 }
-const TRANSCRIPT = inputTranscript();
+const INPUT = readInput();
+const TRANSCRIPT = INPUT && INPUT.transcript_path || null;
+
+function writeUsageSnapshot(input) {
+  try {
+    if (!input || !Object.prototype.hasOwnProperty.call(input, 'rate_limits')) return;
+    const file = 'D:/Skills/usage/claude-status.json';
+    const snapshot = {
+      updated_at: new Date().toISOString(),
+      model: input.model?.id || input.model?.display_name || null,
+      rate_limits: input.rate_limits,
+    };
+    fs.writeFileSync(file + '.tmp', JSON.stringify(snapshot));
+    fs.renameSync(file + '.tmp', file);
+  } catch {}
+}
+writeUsageSnapshot(INPUT);
 
 function getCache() {
   try {
