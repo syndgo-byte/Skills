@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-30T11:15:54.416Z",
+  "updated_at": "2026-09-30T12:44:35.519Z",
   "antigravity": {
     "plan": "TEAMS_TIER_PRO",
     "plan_label": "Google AI Pro",
@@ -13,29 +13,29 @@
       "groups": [
         {
           "models": [
-            "Gemini 3.8 Flash (High)",
-            "Gemini 3.8 Flash (Medium)",
+            "Gemini 3.7 Flash (High)",
             "Gemini 3.7 Flash (Medium)",
+            "Gemini 3.8 Flash (Medium)",
+            "Gemini 3.8 Flash (Low)",
             "Gemini 3.7 Flash (Low)",
             "Gemini 3.6 Flash (High)",
+            "Gemini 3.6 Flash (Medium)",
+            "Gemini 3.6 Flash (Low)",
             "Gemini 3.1 Pro (High)",
             "Gemini 3.1 Pro (Low)",
-            "Gemini 3.8 Flash (Low)",
-            "Gemini 3.7 Flash (High)",
-            "Gemini 3.6 Flash (Medium)",
-            "Gemini 3.6 Flash (Low)"
+            "Gemini 3.8 Flash (High)"
           ],
-          "remaining": 0.9681915,
+          "remaining": 0.9672565,
           "resetMs": 1790774994000
         },
         {
           "models": [
-            "Claude Opus 4.6 (Thinking)",
             "Claude Sonnet 4.6 (Thinking)",
+            "Claude Opus 4.6 (Thinking)",
             "GPT-OSS 120B (Medium)"
           ],
           "remaining": 1,
-          "resetMs": 1790784803000
+          "resetMs": 1790790033000
         }
       ]
     },
@@ -43,9 +43,9 @@
   },
   "claude": {
     "model": "claude-sonnet-5-5",
-    "context": 60909,
+    "context": 150245,
     "loop": 200000,
-    "percent": 30
+    "percent": 75
   },
   "codex": {
     "model": "codex-auto-review",
