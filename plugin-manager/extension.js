@@ -9,6 +9,7 @@ const i18n = require('./lib/i18n');
 const dupes = require('./lib/dupes');
 const updates = require('./lib/updates');
 const usage = require('./lib/usage');
+const mcp = require('./lib/mcp');
 
 const CACHE_KEY = 'cpm.githubCache';
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
@@ -97,7 +98,32 @@ class InstalledProvider {
     return it;
   }
 
+  mcpItem(s) {
+    const h = this.mcpHealth && this.mcpHealth[s.name];
+    const it = new vscode.TreeItem(s.name, vscode.TreeItemCollapsibleState.None);
+    it.id = `mcp:${s.name}`;
+    const state = !this.mcpHealth ? '확인 중…' : this.mcpHealth.error ? '확인 실패'
+      : h ? (h.ok ? '연결됨' : h.text) : '결과 없음';
+    it.description = `${state} · ${s.type}`;
+    it.iconPath = !h ? new vscode.ThemeIcon('plug')
+      : new vscode.ThemeIcon(h.ok ? 'pass-filled' : 'error', new vscode.ThemeColor(h.ok ? 'charts.green' : 'charts.red'));
+    it.tooltip = md([
+      `**${s.name}** — 사용자 MCP 서버 (${state})`,
+      '',
+      `- 실행: \`${s.target}\``,
+      `- 설정 파일: \`${mcp.USER_CONFIG}\``,
+      this.mcpHealth && this.mcpHealth.error ? `- 오류: ${this.mcpHealth.error}` : '',
+    ].join('\n'));
+    return it;
+  }
+
+  setMcpHealth(health) {
+    this.mcpHealth = health;
+    this._emitter.fire();
+  }
+
   load() {
+    this.mcpServers = mcp.listUser(store.readJson);
     this.personal = store.listPersonalSkills();
     this.plugins = store.listInstalled();
     this.dupes = dupes.analyze(this.plugins);
@@ -173,7 +199,15 @@ class InstalledProvider {
       personal.tooltip = '마켓플레이스가 아닌 ~/.claude/skills 폴더에 직접 둔 스킬입니다. 끄면 ~/.claude/skills-disabled 로 옮겨집니다.';
       personal.group = true;
       personal.children = this.personal.map((s) => this.personalItem(s));
-      return [...top, ...this.plugins.map((p) => this.pluginItem(p)), personal];
+      const servers = new vscode.TreeItem(`사용자 MCP 서버 (${this.mcpServers.length})`, vscode.TreeItemCollapsibleState.Expanded);
+      servers.iconPath = new vscode.ThemeIcon('plug');
+      servers.description = '~/.claude.json';
+      servers.tooltip = '플러그인이 아니라 claude mcp add 로 직접 등록한 MCP 서버입니다. 연결 상태는 claude mcp list 결과입니다.';
+      servers.contextValue = 'mcpGroup';
+      servers.group = true;
+      servers.children = this.mcpServers.map((s) => this.mcpItem(s));
+      return [...top, ...this.plugins.map((p) => this.pluginItem(p)), personal,
+        ...(this.mcpServers.length ? [servers] : [])];
     }
     if (el.plugin && !el.group) return this.groupItems(el.plugin);
     if (el.group) return el.children;
@@ -640,7 +674,14 @@ function activate(context) {
 
   autoTranslate(installed, null);
 
-  const reg = (id, fn) => context.subscriptions.push(vscode.commands.registerCommand(id, fn));
+  // Health check spawns every MCP server, so run it on startup and manual refresh only.
+  const checkMcp = () => {
+    installed.setMcpHealth(undefined);
+    mcp.checkHealth(claudePath()).then((h) => installed.setMcpHealth(h));
+  };
+  checkMcp();
+
+  const reg =(id, fn) => context.subscriptions.push(vscode.commands.registerCommand(id, fn));
 
   // Update check: cached result on startup, a fresh check when older than 6 hours, then every 6 hours.
   const UPDATE_KEY = 'cpm.updates';
@@ -739,7 +780,7 @@ function activate(context) {
   });
 
 
-  reg('cpm.refresh', () => { installed.refresh(); status.refresh(); });
+  reg('cpm.refresh', () => { installed.refresh(); status.refresh(); checkMcp(); });
 
   reg('cpm.quickToggle', async () => {
     installed.refresh();
