@@ -1,6 +1,6 @@
 # Model Router
 
-> 마지막 업데이트: 2026년 09월 30일 20:56
+> 마지막 업데이트: 2026년 09월 30일 21:03
 
 작업 유형과 MCP Hub의 사용량을 기준으로 Claude Code, Codex, Antigravity를
 선택하는 MCP stdio 서버입니다. 코어는 Python 표준 라이브러리만 사용하며,
@@ -45,3 +45,9 @@ Antigravity의 `alt_models`로 작업별 모델을 지정할 수 있습니다.
 - 모델 id는 `agy models`, `codex debug models`로 실제 목록을 확인해 씁니다.
 - antigravity의 review·design 작업은 tier와 무관하게 `alt_models`(claude-sonnet-4-6)가 우선합니다.
 - 실행 기록(`runs.jsonl`)에 tier·model·effort가 남아 `report`로 비교할 수 있습니다.
+
+## token-router와의 관계 (선택 연동)
+
+두 폴더는 각자 설치해도 동작합니다.
+- 옆에 `token-router`가 있으면 그 `codex/config.json`, `antigravity/config.json`의 `models`를 tier 표로 씁니다(설정을 한 곳에서 관리). 위치가 다르면 `policy.json`에 `token_router_dir`을 지정합니다.
+- 없거나 파일이 깨져 있으면 `policy.json`의 `tools.<도구>.tiers`로 동작합니다.

@@ -73,13 +73,29 @@ def classify_tier(prompt):
     return "standard"
 
 
+def _token_router_tiers(tool_id, policy):
+    """Tier table from the sibling token-router install, or None when it is not installed.
+
+    policy["token_router_dir"] overrides the default (a folder next to this one).
+    """
+    root = policy.get("token_router_dir")
+    root = Path(os.path.expandvars(root)) if root else Path(__file__).resolve().parent.parent / "token-router"
+    try:
+        data = json.loads((root / tool_id / "config.json").read_text(encoding="utf-8-sig"))
+    except (OSError, ValueError):
+        return None
+    models = data.get("models")
+    return models if isinstance(models, dict) else None
+
+
 def resolve_model(tool_id, task_type, policy, tier=None):
-    """(model, effort) for a tool: alt_models by task type, else the tier table, else the flat model."""
+    """(model, effort): alt_models by task type, else token-router's tiers, else policy tiers, else the flat model."""
     config = policy.get("tools", {}).get(tool_id, {})
     alt = config.get("alt_models", {}).get(task_type)
     if alt:
         return alt, None
-    entry = (config.get("tiers") or {}).get(tier or "standard")
+    tiers = _token_router_tiers(tool_id, policy) or config.get("tiers") or {}
+    entry = tiers.get(tier or "standard")
     if entry:
         return entry.get("model"), entry.get("effort")
     return config.get("model"), None

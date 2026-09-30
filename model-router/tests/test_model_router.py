@@ -214,3 +214,15 @@ def test_tiers(policy, tmp_path):
     assert argv[-3:] == ["-c", 'model_reasoning_effort="high"', "-"] and "-m" in argv
     with pytest.raises(ValueError, match="난도"):
         core.delegate("codex", "x", tmp_path, "test", policy, lambda: {"tools": []}, tier="huge")
+
+
+def test_token_router_config_overrides_and_falls_back(tmp_path):
+    real = json.loads((Path(core.__file__).parent / "policy.json").read_text(encoding="utf-8"))
+    real["token_router_dir"] = str(tmp_path)  # not installed: policy tiers apply
+    assert core.resolve_model("codex", "implement", real, "light") == ("gpt-6-luna", "low")
+    (tmp_path / "codex").mkdir()
+    (tmp_path / "codex" / "config.json").write_text(json.dumps(
+        {"models": {"light": {"model": "shared-model", "effort": "high"}}}), encoding="utf-8")
+    assert core.resolve_model("codex", "implement", real, "light") == ("shared-model", "high")
+    (tmp_path / "codex" / "config.json").write_text("not json", encoding="utf-8")
+    assert core.resolve_model("codex", "implement", real, "light") == ("gpt-6-luna", "low")
