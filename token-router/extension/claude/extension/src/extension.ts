@@ -373,7 +373,44 @@ interface AgyQuota { usedPct: number; resetMs: number; groups: AgyQuotaGroup[]; 
 let agyQuota: AgyQuota | null = null;
 let agyConn: { port: number; token: string } | null = null;
 let agyQuotaBusy = false;
+let agyPlan = '';
+
+// First text value under a plan / tier key in GetUserStatus (the field has moved between agy versions).
+function planName(o: any, depth = 0): string {
+  if (!o || typeof o !== 'object' || depth > 4) return '';
+  for (const [k, v] of Object.entries(o)) {
+    if (!/plan|tier/i.test(k)) continue;
+    const s = typeof v === 'string' ? v : planName(v, depth + 1);
+    if (s) return s;
+  }
+  for (const v of Object.values(o)) {
+    const s = planName(v, depth + 1);
+    if (s) return s;
+  }
+  return '';
+}
+
+// Snapshot for other local apps (MCP Hub's AI tool panel). Usage numbers only, never credentials.
+const AI_STATUS_FILE = 'D:/Skills/usage/ai-status.json';
+function writeAiStatus(agySession: AntigravitySession | null, claude: TabStatus | undefined, codex: CodexUsage | null) {
+  const snap = {
+    updated_at: new Date().toISOString(),
+    antigravity: agySession
+      ? { plan: agyPlan || null, plan_label: agyTier.label, credits: agyTier.credits, quota: agyQuota ? { usedPct: agyQuota.usedPct, resetMs: agyQuota.resetMs, groups: agyQuota.groups } : null, error: agyQuotaErr || null }
+      : null,
+    claude: claude ? { model: claude.model || null, context: claude.context, loop: claude.loop, percent: claude.percent } : null,
+    codex: codex ? { model: codex.model || null, context_tokens: codex.context_tokens, context_window: codex.context_window, context_percent: codex.context_percent, stale: !!codex.stale } : null,
+  };
+  try {
+    fs.mkdirSync(path.dirname(AI_STATUS_FILE), { recursive: true });
+    fs.writeFileSync(AI_STATUS_FILE + '.tmp', JSON.stringify(snap, null, 2));
+    fs.renameSync(AI_STATUS_FILE + '.tmp', AI_STATUS_FILE);
+  } catch {
+    // the status bar keeps working without the snapshot
+  }
+}
 let agyQuotaTry = 0;
+let agyTier: { label: string | null; credits: { prompt: number; flow: number } | null } = { label: null, credits: null };
 let agyQuotaErr = '아직 조회 전';
 
 function findAgyConn(): Promise<{ port: number; token: string } | null> {
@@ -428,6 +465,12 @@ async function refreshAgyQuota() {
     const list = [...groups.values()].sort((a, b) => a.remaining - b.remaining);
     if (!list.length) { agyQuotaErr = '응답에 quotaInfo 없음'; return; }
     agyQuotaErr = '';
+    agyPlan = planName(j?.userStatus) || agyPlan;
+    const ps = j?.userStatus?.planStatus;
+    agyTier = {
+      label: j?.userStatus?.userTier?.description || agyTier.label,
+      credits: ps && typeof ps.availablePromptCredits === 'number' ? { prompt: ps.availablePromptCredits, flow: ps.availableFlowCredits ?? 0 } : agyTier.credits,
+    };
     agyQuota ={ usedPct: Math.round((1 - list[0].remaining) * 100), resetMs: list[0].resetMs, groups: list, at: Date.now() };
   } catch (e: any) {
     agyQuotaErr = '예외: ' + (e?.message || e);
@@ -548,6 +591,7 @@ Model: ${currentClaude.model || '-'}`;
   }
 
   webviewProvider.post({ agySession, claudeTabs, codexSession });
+  writeAiStatus(agySession, currentClaude, codexSession);
 }
 
 function updateAgyItems(agySession: AntigravitySession) {
