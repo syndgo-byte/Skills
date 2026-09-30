@@ -369,7 +369,8 @@ function fallbackAgySession(limits: { threshold: number; loop: number }): Antigr
 
 // --- Antigravity real quota (local agy.exe hub, same source as the "View Usage" popup) ---
 interface AgyQuotaGroup { models: string[]; remaining: number; resetMs: number }
-interface AgyQuota { usedPct: number; resetMs: number; groups: AgyQuotaGroup[]; at: number }
+interface AgyQuotaWindow { group: string; window: string; usedPct: number; resetMs: number }
+interface AgyQuota { usedPct: number; resetMs: number; groups: AgyQuotaGroup[]; windows: AgyQuotaWindow[]; at: number }
 let agyQuota: AgyQuota | null = null;
 let agyConn: { port: number; token: string } | null = null;
 let agyQuotaBusy = false;
@@ -396,7 +397,7 @@ function writeAiStatus(agySession: AntigravitySession | null, claude: TabStatus 
   const snap = {
     updated_at: new Date().toISOString(),
     antigravity: agySession
-      ? { plan: agyPlan || null, plan_label: agyTier.label, credits: agyTier.credits, quota: agyQuota ? { usedPct: agyQuota.usedPct, resetMs: agyQuota.resetMs, groups: agyQuota.groups } : null, error: agyQuotaErr || null }
+      ? { plan: agyPlan || null, plan_label: agyTier.label, credits: agyTier.credits, quota: agyQuota ? { usedPct: agyQuota.usedPct, resetMs: agyQuota.resetMs, groups: agyQuota.groups, windows: agyQuota.windows } : null, error: agyQuotaErr || null }
       : null,
     claude: claude ? { model: claude.model || null, context: claude.context, loop: claude.loop, percent: claude.percent } : null,
     codex: codex ? { model: codex.model || null, context_tokens: codex.context_tokens, context_window: codex.context_window, context_percent: codex.context_percent, stale: !!codex.stale } : null,
@@ -422,12 +423,14 @@ function findAgyConn(): Promise<{ port: number; token: string } | null> {
   }));
 }
 
-function postUserStatus(c: { port: number; token: string }): Promise<any> {
+const postUserStatus = (c: { port: number; token: string }) => postAgy(c, 'GetUserStatus');
+
+function postAgy(c: { port: number; token: string }, method: string): Promise<any> {
   const body = JSON.stringify({ metadata: { ideName: 'antigravity', extensionName: 'antigravity', locale: 'en' } });
   return new Promise((res) => {
     const r = http.request({
       host: '127.0.0.1', port: c.port, method: 'POST', timeout: 3000,
-      path: '/exa.language_server_pb.LanguageServerService/GetUserStatus',
+      path: `/exa.language_server_pb.LanguageServerService/${method}`,
       headers: { 'Content-Type': 'application/json', 'Connect-Protocol-Version': '1', 'X-Codeium-Csrf-Token': c.token, 'Content-Length': Buffer.byteLength(body) },
     }, (rs) => {
       let d = '';
@@ -471,7 +474,17 @@ async function refreshAgyQuota() {
       label: j?.userStatus?.userTier?.description || agyTier.label,
       credits: ps && typeof ps.availablePromptCredits === 'number' ? { prompt: ps.availablePromptCredits, flow: ps.availableFlowCredits ?? 0 } : agyTier.credits,
     };
-    agyQuota ={ usedPct: Math.round((1 - list[0].remaining) * 100), resetMs: list[0].resetMs, groups: list, at: Date.now() };
+    // 5-hour and weekly buckets per model group ("View Usage" popup source).
+    const summary = agyConn ? await postAgy(agyConn, 'RetrieveUserQuotaSummary') : null;
+    const windows: AgyQuotaWindow[] = [];
+    for (const g of summary?.response?.groups || []) {
+      const group = /claude|gpt/i.test(g.displayName || '') ? 'Claude·GPT' : /gemini/i.test(g.displayName || '') ? 'Gemini' : (g.displayName || '');
+      for (const b of g.buckets || []) {
+        if (typeof b.remainingFraction !== 'number') continue;
+        windows.push({ group, window: b.window, usedPct: Math.round((1 - b.remainingFraction) * 100), resetMs: Date.parse(b.resetTime) || 0 });
+      }
+    }
+    agyQuota = { usedPct: Math.round((1 - list[0].remaining) * 100), resetMs: list[0].resetMs, groups: list, windows, at: Date.now() };
   } catch (e: any) {
     agyQuotaErr = '예외: ' + (e?.message || e);
   } finally {
@@ -601,7 +614,8 @@ function updateAgyItems(agySession: AntigravitySession) {
     statusBarAgyTotal.text = `${agyIcon} AGY 5h ${q.usedPct}% (${fmtLeft(q.resetMs)})`;
     statusBarAgyTotal.tooltip = 'Antigravity 실제 쿼터 (사용량 / 리셋까지)\n' + q.groups
       .map((g) => `${Math.round((1 - g.remaining) * 100)}% 사용 · ${fmtLeft(g.resetMs)} 후 리셋 — ${g.models.slice(0, 3).join(', ')}${g.models.length > 3 ? ` 외 ${g.models.length - 3}개` : ''}`)
-      .join('\n');
+      .join('\n')
+      + q.windows.map((w) => `\n${w.group} ${w.window === 'weekly' ? '주간' : '5시간'} ${w.usedPct}% · ${fmtLeft(w.resetMs)} 후 리셋`).join('');
     statusBarAgyTotal.color = q.usedPct >= 100 ? '#ef4444' : q.usedPct >= 80 ? '#eab308' : '#888888';
   } else {
     statusBarAgyTotal.text = `${agyIcon} AGY 5h ${agySession.agyFiveHourPercent ?? 0}% (${fmtLeft(agySession.agyFiveHourResetMs ?? 0)})`;
