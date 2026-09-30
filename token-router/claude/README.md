@@ -11,7 +11,7 @@
 | 플랫폼 | 상태 | 모델 | 기능 |
 |---|---|---|---|
 | **Claude Code** | ✅ 완성 | Haiku, Sonnet, Opus, Fable | ✓ 200k 자동 감시, ✓ 실시간 모델 라우팅, ✓ VSCode 상태표시줄 |
-| **Antigravity** | ⚠️ 미완성 | Gemini 3.1, 3.2, 3.8 | ⚪ 200k 자동 감시, ⚪ 모델 라우팅 구조, ❌ 훅 미등록 |
+| **Antigravity** | ⚠️ 미완성 | Gemini 3.8 Flash (Low, Medium, High) | ⚪ 200k 자동 감시, ⚪ 모델 라우팅 구조, ❌ 훅 미등록 |
 | **Codex** | ⚠️ 미완성 | Luna, Sol, Astra | ⚪ 200k 자동 감시, ⚪ 라우팅 구현, ❌ 수집기 미실행 |
 
 ---
@@ -27,7 +27,7 @@
 
 ### Antigravity ⚠️ 아직 미완성
 - ✓ 200k 자동 감시 기능 코드 구현됨
-- ✓ 모델 라우팅 구조 준비됨 (Gemini 3.1/3.2/3.8)
+- ✓ 모델 라우팅 구조 준비됨 (Gemini 3.8 Flash Low/Medium/High)
 - ✗ **settings.json 훅 미등록** - Antigravity에서 handoff.js가 실행되지 않음
 - ✗ **config.json 미등록** - 로컬 설정에 없음
 
@@ -111,13 +111,13 @@ token-router는 작업 난도에 따라 자동으로 모델을 제안합니다. 
 - 조회, 요약 같은 간단한 작업이면 하향 제안
 - 조건: 명확한 판정 + 1단계 이상 아래 + 맥락 50k 이하
 
-### Antigravity (Gemini 3.1 / 3.2 / 3.8)
+### Antigravity (Gemini 3.8 Flash Low / Medium / High)
 
-**상향 (3.1 → 3.2 / 3.8)**
+**상향 (Low → Medium / High)**
 - 설계, 보안, 복잡한 분석
 - 맥락이 50k를 넘으면 제안하지 않음
 
-**하향 (3.8 / 3.2 → 3.1)**
+**하향 (High / Medium → Low)**
 - 조회, 요약, 간단한 변환
 - 맥락 50k 이하
 

@@ -1,6 +1,6 @@
 # token-router
 
-> 마지막 업데이트: 2026년 09월 30일 20:15
+> 마지막 업데이트: 2026년 09월 30일 20:58
 
 > **Claude Code · Antigravity · Codex** 에서 **긴 대화를 자동으로 끊고 정리해서 다음 세션으로 넘기는** 통합 토큰 관리 시스템
 
@@ -16,7 +16,7 @@
 | 플랫폼 | 상태 | 모델 | 주요 기능 |
 |---|---|---|---|
 | **Claude Code** | ✅ **완성** | Haiku, Sonnet, Opus, Fable | • 200k 자동 감시 • 실시간 handoff 생성 • 모델 라우팅 • VSCode 상태표시줄 • 자동 압축 |
-| **Antigravity** | ⚠️ 미완성 | Gemini 3.1, 3.2, 3.8 | • 200k 감시 코드 O • 모델 라우팅 O • 훅 미등록 ✗ |
+| **Antigravity** | ⚠️ 미완성 | Gemini 3.8 Flash (Low, Medium, High) | • 200k 감시 코드 O • 모델 라우팅 O • 훅 미등록 ✗ |
 | **Codex** | ⚠️ 미완성 | Luna, Sol, Astra | • 200k 감시 코드 O • 라우팅 O • 수집기 미실행 ✗ |
 
 ---
@@ -330,7 +330,7 @@ node claude/route.js --base haiku
 상태: **코드 준비됨, 훅 미등록**
 
 - ✓ 200k 자동 감시 기능 구현됨
-- ✓ 모델 라우팅 구조 준비됨 (Gemini 3.1/3.2/3.8)
+- ✓ 모델 라우팅 구조 준비됨 (Gemini 3.8 Flash Low/Medium/High)
 - ✗ Antigravity settings.json에 훅 미등록 → 아직 실행 안 됨
 
 **다음 단계:**
