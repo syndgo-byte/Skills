@@ -7,23 +7,32 @@
   "timeout_sec": 900,
   "runs_log": "runs.jsonl",
   "roles": {
-    "investigate": [
-      "codex",
-      "antigravity"
-    ],
     "design": [
       "codex",
       "antigravity"
     ],
+    "debug": [
+      "codex",
+      "antigravity"
+    ],
+    "architecture": [
+      "codex"
+    ],
+    "investigate": [
+      "codex",
+      "antigravity"
+    ],
     "review": [
+      "codex"
+    ],
+    "security": [
+      "codex"
+    ],
+    "implement": [
       "codex",
       "antigravity"
     ],
     "git": [
-      "codex",
-      "antigravity"
-    ],
-    "implement": [
       "codex",
       "antigravity"
     ],
@@ -33,6 +42,16 @@
     ],
     "refactor": [
       "codex",
+      "antigravity"
+    ],
+    "fast-implement": [
+      "antigravity",
+      "codex"
+    ],
+    "analyze": [
+      "antigravity"
+    ],
+    "search": [
       "antigravity"
     ],
     "large": [

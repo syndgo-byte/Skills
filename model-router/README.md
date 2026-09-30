@@ -1,6 +1,6 @@
 # Model Router
 
-> 마지막 업데이트: 2026년 10월 01일 05:41
+> 마지막 업데이트: 2026년 10월 01일 05:59
 
 작업 유형과 MCP Hub의 사용량을 기준으로 Claude Code, Codex, Antigravity를
 선택하는 MCP stdio 서버입니다. 코어는 Python 표준 라이브러리만 사용하며,
@@ -35,6 +35,20 @@ Antigravity의 `alt_models`로 작업별 모델을 지정할 수 있습니다.
 
 매월 `runs.jsonl`을 `runs-YYYYMM.jsonl`로 로테이션합니다(2026년 9월: `runs-202609.jsonl`).
 plugin-manager 확장에서 최근 작업 5건과 in-flight 실행을 추적합니다.
+
+## 작업 유형별 도구 선택
+
+각 작업 유형(`task_type`)에 맞는 도구를 선택합니다. 정책은 `policy.json`의 `roles` 객체에서 정의합니다.
+
+| 작업 유형 | 선택 순서 | 이유 |
+|---------|---------|------|
+| `design`, `architecture` | Codex | 보안 기초, 성숙한 구조 설계 |
+| `debug` | Codex → Antigravity | 근본 원인 분석 (Codex), 빠른 대응 (Antigravity) |
+| `review`, `security` | Codex | 보안 감시, PR 검토 전문 |
+| `implement` | Codex → Antigravity | 구현 (Codex), 빠른 구현 필요 시 Antigravity |
+| `fast-implement` | Antigravity → Codex | 빠른 속도 우선 (289 tokens/sec) |
+| `analyze` | Antigravity | 대규모 코드베이스 분석 (100만 토큰) |
+| `search` | Antigravity | Google 검색 그라운딩 (문서/코드 검색) |
 
 ## 난도별 모델 (tier)
 
