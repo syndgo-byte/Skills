@@ -1,6 +1,6 @@
 # token-router
 
-> 마지막 업데이트: 2026년 09월 30일 20:58
+> 마지막 업데이트: 2026년 09월 30일 21:41
 
 > **Claude Code · Antigravity · Codex** 에서 **긴 대화를 자동으로 끊고 정리해서 다음 세션으로 넘기는** 통합 토큰 관리 시스템
 
@@ -16,8 +16,8 @@
 | 플랫폼 | 상태 | 모델 | 주요 기능 |
 |---|---|---|---|
 | **Claude Code** | ✅ **완성** | Haiku, Sonnet, Opus, Fable | • 200k 자동 감시 • 실시간 handoff 생성 • 모델 라우팅 • VSCode 상태표시줄 • 자동 압축 |
-| **Antigravity** | ⚠️ 미완성 | Gemini 3.8 Flash (Low, Medium, High) | • 200k 감시 코드 O • 모델 라우팅 O • 훅 미등록 ✗ |
-| **Codex** | ⚠️ 미완성 | Luna, Sol, Astra | • 200k 감시 코드 O • 라우팅 O • 수집기 미실행 ✗ |
+| **Antigravity** | ⚠️ 미완성 | Gemini 3.8 Flash (Low, Medium, High) | • 컨텍스트 감시 O • 모델 권장 안내 O (PreInvocation 훅, `~/.gemini/config/hooks.json`) • 프롬프트 차단·자동 전환 ✗ (Antigravity 훅이 지원하지 않음) |
+| **Codex** | ⚠️ 미완성 | Luna, Sol, Astra | • 프롬프트 차단형 모델 권장 O (`~/.codex/hooks.json` 등록됨) • 실제 세션 동작 확인 대기 |
 
 ---
 
@@ -45,7 +45,7 @@ token-router/
 ├── data/                      (자동 학습 데이터)
 │   ├── signals-log.jsonl      모든 라우팅 결정 기록 (타임스탐프, 신호, 점수, 결과)
 │   └── signal-weights-history.json  신호 가중치 변경 이력 (시각, 변경값, 정확도, 이유)
-├── antigravity/               (Antigravity 스킬 ⚠️ 미완성)
+├── antigravity/               (Antigravity 스킬 — hook.py 로 모델 권장·컨텍스트 경고)
 │   ├── scripts/
 │   │   ├── handoff.js         (구현됨)
 │   │   ├── route.js           (구현됨)
