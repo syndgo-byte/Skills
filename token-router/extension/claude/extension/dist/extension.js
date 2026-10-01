@@ -281,19 +281,18 @@ function readLastContextFromJsonl(file) {
         if (stat.size === 0)
             return null;
         const fd = fs.openSync(file, 'r');
-        const bufSize = Math.min(8192, stat.size);
+        const bufSize = Math.min(16384, stat.size);
         const buf = Buffer.alloc(bufSize);
         fs.readSync(fd, buf, 0, bufSize, Math.max(0, stat.size - bufSize));
         fs.closeSync(fd);
-        const text = buf.toString('utf8', 0, bufSize);
-        const lines = text.split(/\r?\n/).reverse();
-        for (const line of lines) {
-            if (!line.trim())
-                continue;
+        const text = buf.toString('utf8');
+        const lines = text.split(/[\r\n]+/).filter(l => l.trim());
+        for (let i = lines.length - 1; i >= 0; i--) {
             try {
-                const rec = JSON.parse(line);
-                if (rec.context !== undefined && typeof rec.context === 'number')
+                const rec = JSON.parse(lines[i]);
+                if (rec.context !== undefined && typeof rec.context === 'number') {
                     return rec.context;
+                }
             }
             catch { }
         }
@@ -308,19 +307,18 @@ function readLastModelFromJsonl(file) {
         if (stat.size === 0)
             return '';
         const fd = fs.openSync(file, 'r');
-        const bufSize = Math.min(8192, stat.size);
+        const bufSize = Math.min(16384, stat.size);
         const buf = Buffer.alloc(bufSize);
         fs.readSync(fd, buf, 0, bufSize, Math.max(0, stat.size - bufSize));
         fs.closeSync(fd);
-        const text = buf.toString('utf8', 0, bufSize);
-        const lines = text.split(/\r?\n/).reverse();
-        for (const line of lines) {
-            if (!line.trim())
-                continue;
+        const text = buf.toString('utf8');
+        const lines = text.split(/[\r\n]+/).filter(l => l.trim());
+        for (let i = lines.length - 1; i >= 0; i--) {
             try {
-                const rec = JSON.parse(line);
-                if (rec.model && typeof rec.model === 'string')
+                const rec = JSON.parse(lines[i]);
+                if (rec.model && typeof rec.model === 'string') {
                     return rec.model;
+                }
             }
             catch { }
         }
