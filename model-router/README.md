@@ -1,6 +1,6 @@
 # Model Router
 
-> 마지막 업데이트: 2026년 10월 01일 09:36
+> 마지막 업데이트: 2026년 10월 01일 09:59
 
 작업 유형과 MCP Hub의 사용량을 기준으로 Claude Code, Codex, Antigravity를
 선택하는 MCP stdio 서버입니다. 코어는 Python 표준 라이브러리만 사용하며,
@@ -77,6 +77,15 @@ plugin-manager 확장에서 최근 작업 5건과 in-flight 실행을 추적합�
 
 - `map_ping.js` (SessionStart): 첫 응답에서 `map-ping` 서브에이전트(Haiku)를 한 번 띄워 Agent map을 표시하고, `route("test")` → `delegate(light)`로 실제 위임까지 확인합니다. 결과는 `codex ok` 또는 `codex 실패: …` 한 줄.
 - `agent_guard.js` (PreToolUse, matcher `Agent`): 이름에 Codex/Antigravity가 들어간 서브에이전트가 `delegate`나 `codex exec`/`agy -p`를 실제로 호출하지 않으면 거부합니다. 이름만 Codex이고 Claude가 직접 작업하는 오표시를 막습니다.
+
+## 위임 운영 메모 (2026-10-01)
+
+- Codex 실행 파일은 두 곳에 있을 수 있습니다: `%LOCALAPPDATA%\OpenAI\Codex\bin\*\codex.exe`(`exe_glob` 기본값)와 VSCode 확장 `~/.vscode/extensions/openai.chatgpt-*/bin/windows-x86_64/codex.exe`. PATH에는 없습니다.
+- 직접 실행할 때(cli 0.155): `codex.exe exec -m <model> -c model_reasoning_effort=<effort> -s workspace-write -c approval_policy=never --skip-git-repo-check -C <dir> -o <last.txt> - < spec.md`. `--full-auto`는 제거됐고 `-s`와 `--approve-for-me`는 함께 쓸 수 없습니다.
+- workspace-write 샌드박스는 `.git`에 쓸 수 없으므로 커밋은 호출자(Claude)가 합니다.
+- Codex는 실패해도 exit 0인 경우가 있어 파일·테스트·git을 호출자가 직접 확인합니다.
+- Agent map에 보이게 하려면 Haiku 서브에이전트(이름 `Codex: …`)가 `delegate` 또는 `codex exec`만 실행하고 결과를 그대로 넘기게 합니다. 작업은 하지 않는 얇은 래퍼라 시작 토큰만 듭니다. Bash 백그라운드로 직접 돌리면 Codex 사용량만 줄고 맵에는 안 보입니다.
+- 서브에이전트가 직접 작업했으면 Codex라고 표기하지 않습니다(`agent_guard.js`가 막는 경우도 이것).
 
 ## 사용 예시
 
