@@ -246,9 +246,11 @@ function findMostRecentClaudeSession() {
                 try {
                     const stat = fs.statSync(full);
                     if (!recent || stat.mtimeMs > recent.mtime) {
-                        const t = transcripts.get(full);
-                        if (t)
-                            recent = { file: full, mtime: stat.mtimeMs, context: t.context, model: t.model };
+                        // Read file directly every time (not from cache) for real-time data
+                        const context = readLastContextFromJsonl(full);
+                        const model = readLastModelFromJsonl(full);
+                        if (context !== null)
+                            recent = { file: full, mtime: stat.mtimeMs, context, model };
                     }
                 }
                 catch { }
@@ -271,6 +273,60 @@ function findMostRecentClaudeSession() {
         loop,
         atLoop: recent.context >= loop,
     };
+}
+// Read the last few lines of a .jsonl file to extract context (real-time)
+function readLastContextFromJsonl(file) {
+    try {
+        const stat = fs.statSync(file);
+        if (stat.size === 0)
+            return null;
+        const fd = fs.openSync(file, 'r');
+        const bufSize = Math.min(8192, stat.size);
+        const buf = Buffer.alloc(bufSize);
+        fs.readSync(fd, buf, 0, bufSize, Math.max(0, stat.size - bufSize));
+        fs.closeSync(fd);
+        const text = buf.toString('utf8', 0, bufSize);
+        const lines = text.split(/\r?\n/).reverse();
+        for (const line of lines) {
+            if (!line.trim())
+                continue;
+            try {
+                const rec = JSON.parse(line);
+                if (rec.context !== undefined && typeof rec.context === 'number')
+                    return rec.context;
+            }
+            catch { }
+        }
+    }
+    catch { }
+    return null;
+}
+// Read the last few lines of a .jsonl file to extract model (real-time)
+function readLastModelFromJsonl(file) {
+    try {
+        const stat = fs.statSync(file);
+        if (stat.size === 0)
+            return '';
+        const fd = fs.openSync(file, 'r');
+        const bufSize = Math.min(8192, stat.size);
+        const buf = Buffer.alloc(bufSize);
+        fs.readSync(fd, buf, 0, bufSize, Math.max(0, stat.size - bufSize));
+        fs.closeSync(fd);
+        const text = buf.toString('utf8', 0, bufSize);
+        const lines = text.split(/\r?\n/).reverse();
+        for (const line of lines) {
+            if (!line.trim())
+                continue;
+            try {
+                const rec = JSON.parse(line);
+                if (rec.model && typeof rec.model === 'string')
+                    return rec.model;
+            }
+            catch { }
+        }
+    }
+    catch { }
+    return '';
 }
 function statusForClaude(tab, threshold, loop) {
     const label = tab.label.trim();
