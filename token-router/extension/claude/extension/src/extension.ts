@@ -569,7 +569,10 @@ function update() {
     const claudeLimits = getClaudeLimits();
     claudeTabs = openClaudeTabs().map((t) => statusForClaude(t, claudeLimits.threshold, claudeLimits.loop));
   }
-  const currentClaude = claudeTabs.find((t) => t.active) || claudeTabs[0];
+  // Report the worst-case (highest usage %) across all Claude tabs, not just the active one.
+  const currentClaude = claudeTabs.length > 0
+    ? claudeTabs.reduce((worst, tab) => (tab.percent ?? -1) > (worst.percent ?? -1) ? tab : worst)
+    : undefined;
 
   if (hasAgy && Date.now() - agyQuotaTry > 60000) refreshAgyQuota();
   const agySession = hasAgy ? scanAntigravitySession() : null;
