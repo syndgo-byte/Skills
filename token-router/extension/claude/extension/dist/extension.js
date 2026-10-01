@@ -223,6 +223,55 @@ function openClaudeTabs() {
     }
     return tabs;
 }
+// Fallback: when tab matching fails, read the most recent session file directly.
+function findMostRecentClaudeSession() {
+    const loop = getClaudeLimits().loop;
+    const threshold = getClaudeLimits().threshold;
+    let recent = null;
+    try {
+        const dirs = fs.readdirSync(CLAUDE_PROJECTS_DIR);
+        for (const d of dirs) {
+            const dir = path.join(CLAUDE_PROJECTS_DIR, d);
+            let files = [];
+            try {
+                files = fs.readdirSync(dir);
+            }
+            catch {
+                continue;
+            }
+            for (const f of files) {
+                if (!f.endsWith('.jsonl') || f.startsWith('subagents'))
+                    continue;
+                const full = path.join(dir, f);
+                try {
+                    const stat = fs.statSync(full);
+                    if (!recent || stat.mtimeMs > recent.mtime) {
+                        const t = transcripts.get(full);
+                        if (t)
+                            recent = { file: full, mtime: stat.mtimeMs, context: t.context, model: t.model };
+                    }
+                }
+                catch { }
+            }
+        }
+    }
+    catch { }
+    if (!recent)
+        return undefined;
+    return {
+        source: 'claude',
+        label: '(recent session)',
+        active: true,
+        matched: true,
+        context: recent.context,
+        model: recent.model,
+        emoji: recent.context >= loop ? '🔴' : recent.context >= threshold ? '🟠' : recent.context >= threshold * 0.875 ? '🟡' : '🟢',
+        color: COLORS[recent.context >= loop ? '🔴' : recent.context >= threshold ? '🟠' : recent.context >= threshold * 0.875 ? '🟡' : '🟢'],
+        percent: Math.round((recent.context / loop) * 100),
+        loop,
+        atLoop: recent.context >= loop,
+    };
+}
 function statusForClaude(tab, threshold, loop) {
     const label = tab.label.trim();
     const cut = label.replace(/(\.\.\.|…)$/, '').trim();
@@ -564,15 +613,22 @@ function update() {
         statusBarCodex.hide();
     }
     let claudeTabs = [];
+    let currentClaude;
     if (hasClaude) {
         scanClaudeTranscripts();
         const claudeLimits = getClaudeLimits();
         claudeTabs = openClaudeTabs().map((t) => statusForClaude(t, claudeLimits.threshold, claudeLimits.loop));
+        // Report the worst-case (highest usage %) across all Claude tabs.
+        if (claudeTabs.length > 0) {
+            currentClaude = claudeTabs.reduce((worst, tab) => (tab.percent ?? -1) > (worst.percent ?? -1) ? tab : worst);
+        }
+        // Fallback: if tab matching failed, read the most recent session file directly.
+        if (!currentClaude || !currentClaude.matched) {
+            const recent = findMostRecentClaudeSession();
+            if (recent)
+                currentClaude = recent;
+        }
     }
-    // Report the worst-case (highest usage %) across all Claude tabs, not just the active one.
-    const currentClaude = claudeTabs.length > 0
-        ? claudeTabs.reduce((worst, tab) => (tab.percent ?? -1) > (worst.percent ?? -1) ? tab : worst)
-        : undefined;
     if (hasAgy && Date.now() - agyQuotaTry > 60000)
         refreshAgyQuota();
     const agySession = hasAgy ? scanAntigravitySession() : null;
