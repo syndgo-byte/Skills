@@ -1,6 +1,6 @@
 # Model Router
 
-> 마지막 업데이트: 2026년 10월 01일 10:38
+> 마지막 업데이트: 2026년 10월 01일 10:53
 
 작업 유형과 MCP Hub의 사용량을 기준으로 Claude Code, Codex, Antigravity를
 선택하는 MCP stdio 서버입니다. 코어는 Python 표준 라이브러리만 사용하며,
@@ -76,7 +76,10 @@ plugin-manager 확장에서 최근 작업 5건과 in-flight 실행을 추적합�
 ## Claude Code 연동 훅
 
 - `map_ping.js` (SessionStart): 첫 응답에서 `map-ping` 서브에이전트(Haiku)를 한 번 띄워 Agent map을 표시하고, `route("test")` → `delegate(light)`로 실제 위임까지 확인합니다. 결과는 `codex ok` 또는 `codex 실패: …` 한 줄.
-- `agent_guard.js` (PreToolUse, matcher `Agent`): 이름에 Codex/Antigravity가 들어간 서브에이전트가 `delegate`나 `codex exec`/`agy -p`를 실제로 호출하지 않으면 거부합니다. 이름만 Codex이고 Claude가 직접 작업하는 오표시를 막습니다.
+- `delegate_guard.js` (SubagentStop): `codex-run`/`map-ping` 서브에이전트의 대화 기록에 `mcp__model-router__delegate` 호출이 없으면 종료를 막고 delegate를 부르게 합니다. 두 번째에도 없으면 "Codex가 실행되지 않았습니다" 경고를 띄웁니다. 말 대신 기록을 검사하는 이유: Haiku 래퍼는 지시와 상관없이 "pong"을 직접 답하거나 자기 도구로 pytest를 돌리고 끝낸 적이 있습니다.
+- `~/.claude/agents/codex-run.md`는 `tools: ToolSearch, mcp__model-router__delegate`로 제한해 래퍼가 파일 읽기·수정·Bash로 직접 작업하지 못하게 합니다.
+- 예전 `agent_guard.js`(PreToolUse)는 호출자 프롬프트만 검사해서 정상 호출까지 막아 삭제했습니다.
+- 실제 위임 증거는 `runs.jsonl`의 해당 `run_id`와 `ok: true`입니다. Agent map 라벨은 증거가 아닙니다.
 
 ## 위임 운영 메모 (2026-10-01)
 
@@ -85,7 +88,8 @@ plugin-manager 확장에서 최근 작업 5건과 in-flight 실행을 추적합�
 - workspace-write 샌드박스는 `.git`에 쓸 수 없으므로 커밋은 호출자(Claude)가 합니다.
 - Codex는 실패해도 exit 0인 경우가 있어 파일·테스트·git을 호출자가 직접 확인합니다.
 - Agent map에 보이게 하려면 Haiku 서브에이전트(이름 `Codex: …`)가 `delegate` 또는 `codex exec`만 실행하고 결과를 그대로 넘기게 합니다. 작업은 하지 않는 얇은 래퍼라 시작 토큰만 듭니다. Bash 백그라운드로 직접 돌리면 Codex 사용량만 줄고 맵에는 안 보입니다.
-- 서브에이전트가 직접 작업했으면 Codex라고 표기하지 않습니다(`agent_guard.js`가 막는 경우도 이것).
+- 서브에이전트가 직접 작업했으면 Codex라고 표기하지 않습니다.
+- `codex-run`, `map-ping` 정의와 MCP 서버 코드는 세션 시작 때 읽힙니다. 이미 열린 탭은 옛 정의·옛 코드로 돌아가므로 새 세션에서 써야 합니다.
 
 ## 사용 예시
 
