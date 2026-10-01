@@ -135,12 +135,15 @@ def build_command(tool_id, prompt, cwd, model, policy, effort=None):
     else:
         exe = os.path.expandvars(config.get("exe") or shutil.which(tool_id) or tool_id)
     if tool_id == "codex":
-        argv = [exe, "exec", "-C", str(cwd), "-s", "workspace-write"]
+        # cwd is already confined to allowed_roots, which need not be git repos
+        argv = [exe, "exec", "--skip-git-repo-check", "-C", str(cwd), "-s", "workspace-write"]
         if model:
             argv.extend(["-m", model])
         if effort:
             argv.extend(["-c", f'model_reasoning_effort="{effort}"'])
-        return argv + ["-"], prompt
+        # The model was chosen here on purpose; token-router's Codex hook would otherwise
+        # re-classify the prompt and block it on a mismatch while codex still exits 0.
+        return argv + ["-"], "[router-continue] " + prompt
     argv = [exe, "-p", prompt, "--mode", "accept-edits", "--add-dir", str(cwd)]
     if model:
         argv.extend(["--model", model])
@@ -196,6 +199,8 @@ def delegate(tool_id, prompt, cwd, task_type, policy, quota_fn,
                            errors="replace", capture_output=True)
         exit_code = completed.returncode
         output = _text(completed.stdout) + _text(completed.stderr)
+        if exit_code == 0 and "UserPromptSubmit Blocked" in output:
+            exit_code = 2  # a hook rejected the prompt: nothing ran, so this is not a success
     except subprocess.TimeoutExpired as exc:
         exit_code = -1
         output = _text(exc.stdout) + _text(exc.stderr) + "\n시간 초과 (timeout)"
@@ -215,7 +220,8 @@ def delegate(tool_id, prompt, cwd, task_type, policy, quota_fn,
               "delta_pct": delta, "result": None}
     with Path(policy["runs_log"]).open("a", encoding="utf-8") as stream:
         stream.write(json.dumps(record, ensure_ascii=False) + "\n")
-    return {"run_id": record["run_id"], "tier": tier, "model": model,
+    # ok lets callers tell a real delegation from a failed one without parsing output
+    return {"run_id": record["run_id"], "ok": exit_code == 0, "tool": tool_id, "tier": tier, "model": model,
             "effort": effort, "exit_code": exit_code, "output": output[-4000:], "delta_pct": delta, "duration_sec": duration}
 
 

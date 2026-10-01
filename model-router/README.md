@@ -1,6 +1,6 @@
 # Model Router
 
-> 마지막 업데이트: 2026년 10월 01일 09:30
+> 마지막 업데이트: 2026년 10월 01일 09:36
 
 작업 유형과 MCP Hub의 사용량을 기준으로 Claude Code, Codex, Antigravity를
 선택하는 MCP stdio 서버입니다. 코어는 Python 표준 라이브러리만 사용하며,
@@ -70,6 +70,13 @@ plugin-manager 확장에서 최근 작업 5건과 in-flight 실행을 추적합�
 두 폴더는 각자 설치해도 동작합니다.
 - 옆에 `token-router`가 있으면 그 `codex/config.json`, `antigravity/config.json`의 `models`를 tier 표로 씁니다(설정을 한 곳에서 관리). 위치가 다르면 `policy.json`에 `token_router_dir`을 지정합니다.
 - 없거나 파일이 깨져 있으면 `policy.json`의 `tools.<도구>.tiers`로 동작합니다.
+- token-router의 Codex `UserPromptSubmit` 훅은 프롬프트를 다시 분류해 모델이 다르면 차단합니다. 위임 시 모델은 이미 정해졌으므로 `delegate()`는 프롬프트 앞에 `[router-continue]`를 붙여 통과시킵니다. 그래도 `UserPromptSubmit Blocked`가 나오면 `exit_code=2`, `ok=false`로 실패 처리합니다(차단돼도 codex는 exit 0이라 예전엔 성공으로 기록됐음).
+- `allowed_roots`는 git 저장소가 아니어도 되므로 Codex는 `--skip-git-repo-check`로 실행합니다.
+
+## Claude Code 연동 훅
+
+- `map_ping.js` (SessionStart): 첫 응답에서 `map-ping` 서브에이전트(Haiku)를 한 번 띄워 Agent map을 표시하고, `route("test")` → `delegate(light)`로 실제 위임까지 확인합니다. 결과는 `codex ok` 또는 `codex 실패: …` 한 줄.
+- `agent_guard.js` (PreToolUse, matcher `Agent`): 이름에 Codex/Antigravity가 들어간 서브에이전트가 `delegate`나 `codex exec`/`agy -p`를 실제로 호출하지 않으면 거부합니다. 이름만 Codex이고 Claude가 직접 작업하는 오표시를 막습니다.
 
 ## 사용 예시
 

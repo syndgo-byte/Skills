@@ -68,9 +68,10 @@ def test_route(policy):
     result = core.route("review", exhausted, policy, now=0)
     assert result["tool"] is None and result["model"] is None
     assert result["reason"] == "사용 가능한 도구 없음"
-    assert len(result["skipped"]) == 3
-    result = core.route("review", quota("claude", 95), policy, now=0)
-    assert result["model"] == "claude-sonnet-4-6"
+    assert result["skipped"] == [{"tool": "codex", "reason": "한도 100.0% ≥ 85%"}]
+    # design falls back to antigravity, which serves design on its alt model
+    result = core.route("design", quota("codex", 95), policy, now=0)
+    assert result["tool"] == "antigravity" and result["model"] == "claude-sonnet-4-6"
     with pytest.raises(ValueError):
         core.route("unknown", {}, policy)
 
@@ -78,8 +79,8 @@ def test_route(policy):
 def test_commands(policy, tmp_path):
     cwd = str(tmp_path)
     command, stdin = core.build_command("codex", "hello", cwd, None, policy)
-    assert command == ["fake-codex", "exec", "-C", cwd, "-s", "workspace-write", "-"]
-    assert stdin == "hello"
+    assert command == ["fake-codex", "exec", "--skip-git-repo-check", "-C", cwd, "-s", "workspace-write", "-"]
+    assert stdin == "[router-continue] hello"
     modeled, _ = core.build_command("codex", "hello", cwd, "custom", policy)
     assert modeled[-3:] == ["-m", "custom", "-"]
     agy, stdin = core.build_command("antigravity", "hello", cwd, "gemini", policy)
@@ -120,7 +121,7 @@ def test_delegate_log(policy, tmp_path):
         assert argv[0] == "fake-codex"
         marker, = (tmp_path / "active").glob("*.json")
         assert json.loads(marker.read_text(encoding="utf-8"))["tool"] == "codex"
-        assert kwargs == {"input": "hello", "cwd": str(tmp_path.resolve()),
+        assert kwargs == {"input": "[router-continue] hello", "cwd": str(tmp_path.resolve()),
                           "timeout": 900, "encoding": "utf-8", "errors": "replace",
                           "capture_output": True}
         return SimpleNamespace(returncode=0, stdout="x" * 5000, stderr="tail")
@@ -134,6 +135,14 @@ def test_delegate_log(policy, tmp_path):
     assert row["quota_after"]["codex"] == 17
     assert row["result"] is None and row["delta_pct"] == 7
     assert not list((tmp_path / "active").glob("*.json"))
+
+
+def test_delegate_hook_block_is_failure(policy, tmp_path):
+    def runner(argv, **kwargs):
+        return SimpleNamespace(returncode=0, stdout="hook: UserPromptSubmit Blocked\n", stderr="")
+    result = core.delegate("codex", "hello", tmp_path, "test", policy,
+                           lambda: {"tools": []}, runner)
+    assert result["ok"] is False and result["exit_code"] == 2
 
 
 def test_delegate_timeout(policy, tmp_path):
