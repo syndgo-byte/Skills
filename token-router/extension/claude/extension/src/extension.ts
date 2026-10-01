@@ -233,7 +233,9 @@ function findMostRecentClaudeSession(): TabStatus | undefined {
             // Read file directly every time (not from cache) for real-time data
             const context = readLastContextFromJsonl(full);
             const model = readLastModelFromJsonl(full);
-            if (context !== null) recent = { file: full, mtime: stat.mtimeMs, context, model };
+            if (context !== null) {
+              recent = { file: full, mtime: stat.mtimeMs, context, model };
+            }
           }
         } catch { }
       }
@@ -501,7 +503,7 @@ function writeAiStatus(agySession: AntigravitySession | null, claude: TabStatus 
     // the status bar keeps working without the snapshot
   }
 }
-let agyQuotaTry = 0;
+let agyQuotaTry = Date.now() - 70000; // 초기 60초 지난 것처럼 설정해서 첫 update()에서 즉시 호출
 let agyTier: { label: string | null; credits: { prompt: number; flow: number } | null } = { label: null, credits: null };
 let agyQuotaErr = '아직 조회 전';
 
@@ -568,6 +570,7 @@ async function refreshAgyQuota() {
     // 5-hour and weekly buckets per model group ("View Usage" popup source).
     const summary = agyConn ? await postAgy(agyConn, 'RetrieveUserQuotaSummary') : null;
     const windows: AgyQuotaWindow[] = [];
+    if (!summary) agyQuotaErr = `RetrieveUserQuotaSummary 응답 없음`;
     for (const g of summary?.response?.groups || []) {
       const group = /claude|gpt/i.test(g.displayName || '') ? 'Claude·GPT' : /gemini/i.test(g.displayName || '') ? 'Gemini' : (g.displayName || '');
       for (const b of g.buckets || []) {
