@@ -1,6 +1,6 @@
 # token-router
 
-> 마지막 업데이트: 2026년 10월 02일 07:25
+> 마지막 업데이트: 2026년 10월 02일 22:29
 
 > **Claude Code · Antigravity · Codex** 에서 **긴 대화를 자동으로 끊고 정리해서 다음 세션으로 넘기는** 통합 토큰 관리 시스템
 
@@ -16,8 +16,8 @@
 | 플랫폼 | 상태 | 모델 | 주요 기능 |
 |---|---|---|---|
 | **Claude Code** | ✅ **완성** | Haiku, Sonnet, Opus, Fable | • 200k 자동 감시 • 실시간 handoff 생성 • 모델 라우팅 • VSCode 상태표시줄 • 자동 압축 |
-| **Antigravity** | ⚠️ 미완성 | Gemini 3.8 Flash (Low, Medium, High) | • 컨텍스트 감시 O • 모델 권장 안내 O (PreInvocation 훅, `~/.gemini/config/hooks.json`) • 프롬프트 차단·자동 전환 ✗ (Antigravity 훅이 지원하지 않음) |
-| **Codex** | ⚠️ 미완성 | Luna, Sol, Astra | • 프롬프트 차단형 모델 권장 O (`~/.codex/hooks.json` 등록됨) • 실제 세션에서 차단·권장 동작 확인 완료 (최초 1회 `codex` 실행 후 훅 검토에서 `t`로 승인 필요) |
+| **Antigravity** | ✅ **완성** | Gemini 3.8 Flash (Low, Medium, High) | • 컨텍스트 감시 ✓ • 모델 권장 안내 ✓ (PreInvocation 훅) • 자동 handoff ✓ • 스냅샷 백업 ✓ |
+| **Codex** | ✅ **완성** | Luna, Sol, Astra | • 프롬프트 게이트 ✓ • 모델 권장 & 차단 ✓ • 자동 handoff ✓ • 스냅샷 백업 ✓ • 세션 상태 추적 ✓ |
 
 ---
 
@@ -325,30 +325,46 @@ node claude/route.js --base haiku
 
 ---
 
-## ⚠️ Antigravity (미완성)
+## ✅ Antigravity (완성)
 
-상태: **코드 준비됨, 훅 미등록**
+상태: **전체 기능 구현 완료**
 
-- ✓ 200k 자동 감시 기능 구현됨
-- ✓ 모델 라우팅 구조 준비됨 (Gemini 3.8 Flash Low/Medium/High)
-- ✗ Antigravity settings.json에 훅 미등록 → 아직 실행 안 됨
+- ✓ 200k 자동 감시 기능 (`scripts/handoff.js`)
+- ✓ 모델 & 서브에이전트 라우팅 (`scripts/route.js` - Gemini 3.8 Flash Low/Medium/High)
+- ✓ 모델 권장 안내 (`scripts/hook.py` - PreInvocation 훅)
+- ✓ 자동 스냅샷 백업 (`scripts/snapshot.js`)
+- ✓ 설정 파일 준비 (`config.json`)
 
-**다음 단계:**
-Antigravity 설정에서 `handoff.js hook`, `route.js hook` 등록 필요
+**사용법:**
+설치 후 Antigravity 설정에서 `~/.gemini/config/hooks.json`에 다음 훅을 등록하면 자동 실행됩니다:
+```json
+{
+  "PreInvocation": "python D:/Skills/token-router/antigravity/scripts/hook.py"
+}
+```
 
 ---
 
-## ⚠️ Codex (미완성)
+## ✅ Codex (완성)
 
-상태: **코드 준비됨, 수집기 미실행**
+상태: **전체 기능 구현 및 검증 완료**
 
-- ✓ 200k 자동 감시 기능 구현됨 (hook.py)
-- ✓ 라우팅 로직 구현됨 (router.py)
-- ✗ 수집기 미실행 → 사용량 데이터 없음 → hook 미동작
+- ✓ 프롬프트 게이트 & 자동 모델 차단 (`scripts/hook.py`)
+- ✓ 작업 난도별 모델 & effort 추천 (`scripts/router.py` - Luna, Sol, Astra)
+- ✓ 자동 handoff 파일 생성 (handoff 명령)
+- ✓ 변경 파일 스냅샷 백업 (snapshot 명령)
+- ✓ 세션 상태 추적 및 확장 연동
+- ✓ 설정 파일 준비 (`config.json`)
+- ✓ 실제 세션에서 훅 동작 확인 완료
 
-**다음 단계:**
-1. Codex 수집기 시작: `D:\Skills\usage\codex\start.ps1`
-2. Codex IDE에서 실제 hook 동작 확인
+**사용법:**
+Codex 설정에서 `~/.codex/hooks.json`에 다음 훅을 등록하면 자동 실행됩니다:
+```json
+{
+  "UserPromptSubmit": "python D:/Skills/token-router/codex/scripts/hook.py"
+}
+```
+훅 등록 후 첫 실행 시 신뢰 검토를 승인하면 자동으로 차단 & 권장 동작이 시작됩니다.
 
 ---
 
