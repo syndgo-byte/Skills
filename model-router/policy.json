@@ -69,7 +69,7 @@
           "effort": "low"
         },
         "standard": {
-          "model": "gpt-6-sol",
+          "model": "gpt-6-sol-6.1",
           "effort": "medium"
         },
         "complex": {
