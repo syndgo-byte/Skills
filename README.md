@@ -1,6 +1,6 @@
 # Skills
 
-> 마지막 업데이트: 2026년 10월 03일 22:10
+> 마지막 업데이트: 2026년 10월 03일 22:28
 
 개인 AI·개발 도구 모음. 아래 목록은 실제 폴더 기준입니다 (2026-10-03).
 
@@ -11,7 +11,6 @@
 | permission-manager | 권한 관리 도구 |
 | plugin-manager | 플러그인 관리 도구 |
 | plugin-profiler | 플러그인 성능 측정 |
-| security-idle | 유휴 보안 점검 |
 | token-audit | 토큰 사용 분석 |
 | free-ai-offers | 무료 AI 서비스 정보 도구 |
 | usage | 사용량 수집 도구 |
