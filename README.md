@@ -1,50 +1,25 @@
 # Skills
 
-> 마지막 업데이트: 2026년 10월 02일 22:30
+> 마지막 업데이트: 2026년 10월 03일 19:22
 
-개인 AI/개발 도구 모음
+개인 AI·개발 도구 모음. 아래 목록은 실제 폴더 기준입니다 (2026-10-03).
 
-## 폴더 구조
+| 폴더 | 용도 |
+|---|---|
+| token-router | Claude·Codex·Antigravity 토큰 라우팅 및 인수인계 도구 |
+| model-router | 모델 선택 도구 |
+| permission-manager | 권한 관리 도구 |
+| plugin-manager | 플러그인 관리 도구 |
+| plugin-profiler | 플러그인 성능 측정 |
+| security-idle | 유휴 보안 점검 |
+| token-audit | 토큰 사용 분석 |
+| free-ai-offers | 무료 AI 서비스 정보 도구 |
+| usage | 사용량 수집 도구 |
 
-```
-Skills/
-├── token-router/          토큰 라우팅 시스템
-│   ├── extension/         VSCode 확장 (Claude context + AGY 쿼터)
-│   ├── claude/            Claude Code 스킬 ✅ 완성
-│   ├── antigravity/       Antigravity 스킬 ⚠️ 미완성
-│   └── codex/             Codex 스킬 ⚠️ 미완성
-├── usage/
-│   └── codex/             Codex 사용량 수집기
-├── Claude_Skills/         Claude Code 플러그인 모음
-│   ├── plugin-profiler    turn budget & 성능 프로파일링
-│   ├── plugin-manager
-│   ├── free-ai-offers
-│   └── token-audit
-├── Codex_Skills/          (비어 있음)
-└── Antigravity_Skills/    (비어 있음)
-```
-
-## 각 폴더 설명
-
-### token-router
-
-**Claude Code · Antigravity · Codex** 에서 context가 커질 때 자동으로 정리해서 다음 세션으로 넘기는 토큰 관리 시스템
-
-### Claude_Skills
-
-Claude Code 플러그인 & 성능 도구
-
-- **plugin-profiler**: turn budget 계산 + 성능 프로파일링
-- **plugin-manager**: 플러그인 관리
-- **token-audit**: 토큰 사용량 분석
-- **free-ai-offers**: 무료 AI 서비스 목록
-
-### usage/codex
-
-Codex 사용량 실시간 수집기
-
----
+각 도구의 설치·실행 방법은 해당 폴더의 README 또는 SKILL.md를 참고하세요.
+인수인계 기록, 실행 상태, 검증 임시 산출물, 로컬 백업은 Git에 추가하지 않습니다.
+기존 커밋 이력의 파일은 이번 정리로 삭제되지 않습니다.
 
 ## 라이선스
 
-개인 용도
+개인 용도.
